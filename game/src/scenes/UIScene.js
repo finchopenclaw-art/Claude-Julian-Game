@@ -42,6 +42,13 @@ export class UIScene extends Phaser.Scene {
                 fontSize: '10px', fontFamily: 'Arial', color: '#888888',
             }).setDepth(202);
 
+            // Click to select slot
+            bg.setInteractive({ useHandCursor: true });
+            const slotIndex = i;
+            bg.on('pointerdown', () => {
+                this.inventory.selectSlot(slotIndex);
+            });
+
             this.hotbarSlots.push({ bg, icon });
             this.hotbarTexts.push(txt);
         }
