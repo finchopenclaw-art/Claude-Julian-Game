@@ -45,6 +45,10 @@ export class WorldScene extends Phaser.Scene {
             A: Phaser.Input.Keyboard.KeyCodes.A,
             S: Phaser.Input.Keyboard.KeyCodes.S,
             D: Phaser.Input.Keyboard.KeyCodes.D,
+            UP: Phaser.Input.Keyboard.KeyCodes.UP,
+            LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            DOWN: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT,
         });
 
         // --- Collision layer: invisible bodies on non-walkable tiles ---
@@ -187,10 +191,10 @@ export class WorldScene extends Phaser.Scene {
         let vx = 0;
         let vy = 0;
 
-        if (this.keys.A.isDown) vx = -1;
-        else if (this.keys.D.isDown) vx = 1;
-        if (this.keys.W.isDown) vy = -1;
-        else if (this.keys.S.isDown) vy = 1;
+        if (this.keys.A.isDown || this.keys.LEFT.isDown) vx = -1;
+        else if (this.keys.D.isDown || this.keys.RIGHT.isDown) vx = 1;
+        if (this.keys.W.isDown || this.keys.UP.isDown) vy = -1;
+        else if (this.keys.S.isDown || this.keys.DOWN.isDown) vy = 1;
 
         // Normalize diagonal movement
         if (vx !== 0 && vy !== 0) {
