@@ -16,7 +16,7 @@ export class UIScene extends Phaser.Scene {
         const HOTBAR_SLOTS = 8;
         const hotbarWidth = HOTBAR_SLOTS * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP;
         const hotbarX = (this.cameras.main.width - hotbarWidth) / 2;
-        const hotbarY = this.cameras.main.height - SLOT_SIZE - 12;
+        const hotbarY = this.cameras.main.height - SLOT_SIZE - 30;
 
         for (let i = 0; i < HOTBAR_SLOTS; i++) {
             const x = hotbarX + i * (SLOT_SIZE + SLOT_GAP);
@@ -203,6 +203,16 @@ export class UIScene extends Phaser.Scene {
         }).setOrigin(0.5, 0);
         this.inventoryPanel.add(title);
 
+        // Close button
+        const closeBtn = this.add.rectangle(px + panelW - 20, py + 20, 28, 28, 0x882222, 0.9)
+            .setStrokeStyle(1, 0xaa4444).setInteractive({ useHandCursor: true });
+        const closeTxt = this.add.text(px + panelW - 20, py + 20, 'X', {
+            fontSize: '14px', fontFamily: 'Arial', color: '#ffffff', fontStyle: 'bold',
+        }).setOrigin(0.5);
+        closeBtn.on('pointerdown', () => { this.toggleInventory(); });
+        this.inventoryPanel.add(closeBtn);
+        this.inventoryPanel.add(closeTxt);
+
         // Slots
         for (let i = 0; i < 20; i++) {
             const col = i % COLS;
@@ -254,74 +264,116 @@ export class UIScene extends Phaser.Scene {
         }
     }
 
-    _showCraftingPanel() {
+    _showCraftingPanel(page) {
         const craftSystem = this.worldScene.craftSystem;
         this.craftingPanel = this.add.container(0, 0).setDepth(300);
 
+        const RECIPES_PER_PAGE = 6;
+        const recipes = craftSystem.getRecipes();
+        const totalPages = Math.ceil(recipes.length / RECIPES_PER_PAGE);
+        this._craftPage = Math.min(page || this._craftPage || 0, totalPages - 1);
+        const startIdx = this._craftPage * RECIPES_PER_PAGE;
+        const pageRecipes = recipes.slice(startIdx, startIdx + RECIPES_PER_PAGE);
+
         // Dark overlay
         const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.5);
+        overlay.setInteractive();
+        overlay.on('pointerdown', () => { this.toggleCrafting(); });
         this.craftingPanel.add(overlay);
 
         // Panel background
         const panelW = 360;
-        const panelH = 540;
+        const panelH = 56 * pageRecipes.length + 100;
         const px = (800 - panelW) / 2;
         const py = (600 - panelH) / 2;
 
         const panelBg = this.add.rectangle(400, 300, panelW, panelH, 0x1a1a2e, 0.95);
         panelBg.setStrokeStyle(2, 0x555555);
+        panelBg.setInteractive(); // block clicks through to overlay
         this.craftingPanel.add(panelBg);
 
         // Title
-        const title = this.add.text(400, py + 14, 'Crafting', {
+        const title = this.add.text(400, py + 14, `Crafting (${this._craftPage + 1}/${totalPages})`, {
             fontSize: '16px', fontFamily: 'Arial', color: '#ffffff',
         }).setOrigin(0.5, 0);
         this.craftingPanel.add(title);
 
         // Recipe list
-        const recipes = craftSystem.getRecipes();
-        recipes.forEach((recipe, i) => {
-            const ry = py + 50 + i * 58;
+        pageRecipes.forEach((recipe, i) => {
+            const ry = py + 46 + i * 56;
 
-            // Recipe row background
             const rowColor = recipe.craftable ? 0x2a3a2a : 0x2a2a2a;
-            const row = this.add.rectangle(400, ry + 20, panelW - 30, 50, rowColor, 0.9);
+            const row = this.add.rectangle(400, ry + 22, panelW - 30, 48, rowColor, 0.9);
             row.setStrokeStyle(1, recipe.craftable ? 0x4ade80 : 0x444444);
             this.craftingPanel.add(row);
 
-            // Recipe name
             const nameColor = recipe.craftable ? '#ffffff' : '#666666';
             const name = this.add.text(px + 24, ry + 6, recipe.displayName, {
                 fontSize: '14px', fontFamily: 'Arial', color: nameColor, fontStyle: 'bold',
             });
             this.craftingPanel.add(name);
 
-            // Inputs text
             const inputStr = Object.entries(recipe.inputs).map(([id, qty]) => `${qty} ${id}`).join(', ');
             const inputTxt = this.add.text(px + 24, ry + 24, `Needs: ${inputStr}`, {
                 fontSize: '11px', fontFamily: 'Arial', color: recipe.craftable ? '#aaaaaa' : '#555555',
             });
             this.craftingPanel.add(inputTxt);
 
-            // Output text
             const outputTxt = this.add.text(px + panelW - 24, ry + 14, `\u2192 ${recipe.outputQty} ${recipe.output}`, {
                 fontSize: '11px', fontFamily: 'Arial', color: recipe.craftable ? '#4ade80' : '#555555',
             }).setOrigin(1, 0);
             this.craftingPanel.add(outputTxt);
 
-            // Click to craft
             if (recipe.craftable) {
                 row.setInteractive({ useHandCursor: true });
                 row.on('pointerdown', () => {
                     craftSystem.craft(recipe.id);
-                    // Refresh panel
                     this._hideCraftingPanel();
                     this._showCraftingPanel();
                 });
-                row.on('pointerover', () => row.setFillStyle(0x3a4a3a, 0.9));
-                row.on('pointerout', () => row.setFillStyle(rowColor, 0.9));
             }
         });
+
+        // Pagination buttons
+        const navY = py + panelH - 30;
+        if (this._craftPage > 0) {
+            const prevBtn = this.add.rectangle(400 - 60, navY, 80, 30, 0x444444, 0.9)
+                .setStrokeStyle(1, 0x666666).setInteractive({ useHandCursor: true });
+            const prevTxt = this.add.text(400 - 60, navY, '\u25C0 Prev', {
+                fontSize: '12px', fontFamily: 'Arial', color: '#ffffff',
+            }).setOrigin(0.5);
+            prevBtn.on('pointerdown', () => {
+                this._craftPage--;
+                this._hideCraftingPanel();
+                this._showCraftingPanel();
+            });
+            this.craftingPanel.add(prevBtn);
+            this.craftingPanel.add(prevTxt);
+        }
+        if (this._craftPage < totalPages - 1) {
+            const nextBtn = this.add.rectangle(400 + 60, navY, 80, 30, 0x444444, 0.9)
+                .setStrokeStyle(1, 0x666666).setInteractive({ useHandCursor: true });
+            const nextTxt = this.add.text(400 + 60, navY, 'Next \u25B6', {
+                fontSize: '12px', fontFamily: 'Arial', color: '#ffffff',
+            }).setOrigin(0.5);
+            nextBtn.on('pointerdown', () => {
+                this._craftPage++;
+                this._hideCraftingPanel();
+                this._showCraftingPanel();
+            });
+            this.craftingPanel.add(nextBtn);
+            this.craftingPanel.add(nextTxt);
+        }
+
+        // Close button
+        const closeBtn = this.add.rectangle(px + panelW - 20, py + 20, 28, 28, 0x882222, 0.9)
+            .setStrokeStyle(1, 0xaa4444).setInteractive({ useHandCursor: true });
+        const closeTxt = this.add.text(px + panelW - 20, py + 20, 'X', {
+            fontSize: '14px', fontFamily: 'Arial', color: '#ffffff', fontStyle: 'bold',
+        }).setOrigin(0.5);
+        closeBtn.on('pointerdown', () => { this.toggleCrafting(); });
+        this.craftingPanel.add(closeBtn);
+        this.craftingPanel.add(closeTxt);
     }
 
     _hideCraftingPanel() {
@@ -486,9 +538,9 @@ export class UIScene extends Phaser.Scene {
         const B = 56; // button size
         const G = 6;  // gap
 
-        // ===== D-PAD (bottom-left) =====
+        // ===== D-PAD (bottom-left, above hotbar) =====
         const padX = 80;
-        const padY = 480;
+        const padY = 450;
 
         // Up
         const upBtn = this._touchBtn(padX, padY - B - G, B, B, '\u25B2', 0x444444);
@@ -516,7 +568,7 @@ export class UIScene extends Phaser.Scene {
 
         // ===== ACTION BUTTONS (bottom-right) =====
         const actX = 720;
-        const actY = 470;
+        const actY = 440;
 
         // Gather / Eat button
         const gatherBtn = this._touchBtn(actX, actY, 64, 64, 'E', 0x2a7a2a);
