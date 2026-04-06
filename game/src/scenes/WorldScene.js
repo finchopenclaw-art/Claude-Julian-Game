@@ -5,6 +5,7 @@ import { GatherSystem } from '../systems/GatherSystem.js';
 import { CraftSystem } from '../systems/CraftSystem.js';
 import { BuildSystem } from '../systems/BuildSystem.js';
 import { ItemDefs } from '../data/ItemDefs.js';
+import { SurvivalSystem } from '../systems/SurvivalSystem.js';
 
 export class WorldScene extends Phaser.Scene {
     constructor() { super('World'); }
@@ -93,6 +94,11 @@ export class WorldScene extends Phaser.Scene {
         // --- Build System ---
         this.buildSystem = new BuildSystem(this, this.inventory);
 
+        // --- Survival System ---
+        this.survivalSystem = new SurvivalSystem(this.inventory);
+        this.survivalSystem.lastHungerTick = this.time.now;
+        this.survivalSystem.lastStarveTick = this.time.now;
+
         // Enter build mode when selecting a Buildable item
         this.inventory.onChange(() => {
             const selectedItem = this.inventory.getSelectedItem();
@@ -105,6 +111,12 @@ export class WorldScene extends Phaser.Scene {
 
         // --- Gather input (E key) ---
         this.input.keyboard.on('keydown-E', () => {
+            // Try to eat if holding a consumable
+            const selectedItem = this.inventory.getSelectedItem();
+            if (selectedItem && ItemDefs[selectedItem]?.category === 'Consumable') {
+                if (this.survivalSystem.tryEat(selectedItem)) return;
+            }
+            // Otherwise try to gather
             this.gatherSystem.tryGather(this.time.now);
         });
 
@@ -152,7 +164,18 @@ export class WorldScene extends Phaser.Scene {
     }
 
     update() {
-        const speed = this.moveSpeed;
+        if (this.survivalSystem.isDead()) {
+            this.player.setVelocity(0, 0);
+            if (!this.deathText) {
+                this.deathText = this.add.text(this.player.x, this.player.y - 40, 'You died! Refresh to restart.', {
+                    fontSize: '18px', fontFamily: 'Arial', color: '#ff4444',
+                    stroke: '#000000', strokeThickness: 3,
+                }).setOrigin(0.5).setDepth(200);
+            }
+            return; // stop all updates
+        }
+
+        const speed = this.moveSpeed * this.survivalSystem.speedMultiplier;
         let vx = 0;
         let vy = 0;
 
@@ -171,5 +194,17 @@ export class WorldScene extends Phaser.Scene {
         this.player.setVelocity(vx * speed, vy * speed);
         this.gatherSystem.update(this.player.x, this.player.y, this.time.now);
         this.buildSystem.update(this.input.activePointer, this.cameras.main);
+
+        // Survival
+        this.survivalSystem.update(this.time.now);
+
+        // Update UI bars
+        const ui = this.scene.get('UI');
+        if (ui && ui.updateSurvivalBars) {
+            ui.updateSurvivalBars(
+                this.survivalSystem.health, this.survivalSystem.maxHealth,
+                this.survivalSystem.hunger, this.survivalSystem.maxHunger
+            );
+        }
     }
 }
