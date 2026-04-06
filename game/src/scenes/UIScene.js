@@ -605,14 +605,11 @@ export class UIScene extends Phaser.Scene {
             }
         });
 
-        // Remove block button
+        // Remove block button — removes nearest block to player
         const removeBtn = this._touchBtn(actX, actY - 74, 64, 64, 'Break', 0x7a2a2a);
         removeBtn.bg.on('pointerdown', () => {
             const ws = this.scene.get('World');
-            ws.buildSystem.tryRemove(
-                ws.player.x, ws.player.y,
-                ws.input.activePointer, ws.cameras.main
-            );
+            ws.buildSystem.tryRemoveNearest(ws.player.x, ws.player.y);
         });
 
         // ===== TOP MENU BUTTONS =====

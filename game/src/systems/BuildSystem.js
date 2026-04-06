@@ -115,6 +115,31 @@ export class BuildSystem {
         return false;
     }
 
+    tryRemoveNearest(playerX, playerY) {
+        let nearest = -1;
+        let nearestDist = Infinity;
+        const maxDist = 48 + TILE_SIZE;
+
+        for (let i = 0; i < this.placedBlocks.length; i++) {
+            const block = this.placedBlocks[i];
+            const bx = block.tileX * TILE_SIZE + TILE_SIZE / 2;
+            const by = block.tileY * TILE_SIZE + TILE_SIZE / 2;
+            const dist = Phaser.Math.Distance.Between(playerX, playerY, bx, by);
+            if (dist < maxDist && dist < nearestDist) {
+                nearest = i;
+                nearestDist = dist;
+            }
+        }
+
+        if (nearest === -1) return false;
+
+        const block = this.placedBlocks[nearest];
+        block.sprite.destroy();
+        this.placedBlocks.splice(nearest, 1);
+        this.inventory.addItem(block.itemId, 1);
+        return true;
+    }
+
     _canPlace(tileX, tileY) {
         // Out of bounds
         if (tileX < 0 || tileY < 0 || tileX >= MAP_DATA[0].length || tileY >= MAP_DATA.length) return false;
