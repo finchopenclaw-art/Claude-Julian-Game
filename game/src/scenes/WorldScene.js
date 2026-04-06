@@ -152,8 +152,12 @@ export class WorldScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-C', () => {
             this.scene.get('UI').toggleCrafting();
         });
+        this.input.keyboard.on('keydown-H', () => {
+            this.scene.get('UI').toggleHelp();
+        });
         this.input.keyboard.on('keydown-ESC', () => {
             const ui = this.scene.get('UI');
+            if (ui.helpOpen) { ui._hideHelp(); return; }
             if (ui.craftingOpen) { ui.toggleCrafting(); return; }
             if (ui.inventoryOpen) { ui.toggleInventory(); return; }
             if (this.buildSystem.active) { this.buildSystem.exitBuildMode(); return; }

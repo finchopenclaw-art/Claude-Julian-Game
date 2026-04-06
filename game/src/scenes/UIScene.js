@@ -88,6 +88,11 @@ export class UIScene extends Phaser.Scene {
         this.craftingPanel = null;
         this.craftingOpen = false;
 
+        // --- Help overlay (shown on start) ---
+        this.helpPanel = null;
+        this.helpOpen = false;
+        this._showHelp();
+
         // --- Listen for inventory changes ---
         this.inventory.onChange(() => {
             this.refreshHotbar();
@@ -312,6 +317,141 @@ export class UIScene extends Phaser.Scene {
         if (this.craftingPanel) {
             this.craftingPanel.destroy();
             this.craftingPanel = null;
+        }
+    }
+
+    toggleHelp() {
+        this.helpOpen = !this.helpOpen;
+        if (this.helpOpen) {
+            this._showHelp();
+        } else {
+            this._hideHelp();
+        }
+    }
+
+    _showHelp() {
+        this.helpOpen = true;
+        this.helpPanel = this.add.container(0, 0).setDepth(400);
+
+        // Dark overlay
+        const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
+        overlay.setInteractive(); // block clicks through
+        this.helpPanel.add(overlay);
+
+        // Panel
+        const panelW = 520;
+        const panelH = 440;
+        const px = (800 - panelW) / 2;
+        const py = (600 - panelH) / 2;
+
+        const bg = this.add.rectangle(400, 300, panelW, panelH, 0x1a1a2e, 0.95);
+        bg.setStrokeStyle(2, 0x4ade80);
+        this.helpPanel.add(bg);
+
+        // Title
+        const title = this.add.text(400, py + 16, 'Survival Crafting', {
+            fontSize: '22px', fontFamily: 'Arial', color: '#4ade80', fontStyle: 'bold',
+        }).setOrigin(0.5, 0);
+        this.helpPanel.add(title);
+
+        // Goal section
+        const goalY = py + 52;
+        const goal = this.add.text(400, goalY, 'Gather resources. Craft tools. Build shelter. Survive.', {
+            fontSize: '13px', fontFamily: 'Arial', color: '#cccccc', fontStyle: 'italic',
+        }).setOrigin(0.5, 0);
+        this.helpPanel.add(goal);
+
+        // Gameplay steps
+        const stepsY = goalY + 32;
+        const steps = [
+            { icon: '1', title: 'GATHER', desc: 'Walk near trees or rocks and press E to collect Wood and Stone' },
+            { icon: '2', title: 'CRAFT', desc: 'Press C to open crafting. Make planks, tools, and building blocks' },
+            { icon: '3', title: 'BUILD', desc: 'Select a block in hotbar, then left-click to place it in the world' },
+            { icon: '4', title: 'SURVIVE', desc: 'Your hunger drains over time. Select food and press E to eat' },
+        ];
+
+        steps.forEach((step, i) => {
+            const sy = stepsY + i * 52;
+
+            // Step number circle
+            const circle = this.add.circle(px + 30, sy + 16, 14, 0x4ade80, 1);
+            this.helpPanel.add(circle);
+            const num = this.add.text(px + 30, sy + 16, step.icon, {
+                fontSize: '14px', fontFamily: 'Arial', color: '#1a1a2e', fontStyle: 'bold',
+            }).setOrigin(0.5);
+            this.helpPanel.add(num);
+
+            // Step title
+            const titleTxt = this.add.text(px + 54, sy + 4, step.title, {
+                fontSize: '14px', fontFamily: 'Arial', color: '#ffffff', fontStyle: 'bold',
+            });
+            this.helpPanel.add(titleTxt);
+
+            // Step description
+            const descTxt = this.add.text(px + 54, sy + 22, step.desc, {
+                fontSize: '11px', fontFamily: 'Arial', color: '#999999',
+            });
+            this.helpPanel.add(descTxt);
+        });
+
+        // Controls section
+        const controlsY = stepsY + steps.length * 52 + 12;
+        const controlsTitle = this.add.text(400, controlsY, 'CONTROLS', {
+            fontSize: '13px', fontFamily: 'Arial', color: '#4ade80', fontStyle: 'bold',
+        }).setOrigin(0.5, 0);
+        this.helpPanel.add(controlsTitle);
+
+        const controls = [
+            ['WASD', 'Move'],
+            ['E', 'Gather / Eat'],
+            ['C', 'Crafting'],
+            ['Tab / I', 'Inventory'],
+            ['1-8', 'Select hotbar slot'],
+            ['Left Click', 'Place block'],
+            ['Right Click', 'Remove block'],
+            ['H', 'Toggle this help'],
+            ['Esc', 'Close menus'],
+        ];
+
+        const col1X = px + 40;
+        const col2X = px + 280;
+        controls.forEach((ctrl, i) => {
+            const col = i < 5 ? 0 : 1;
+            const row = i < 5 ? i : i - 5;
+            const cx = col === 0 ? col1X : col2X;
+            const cy = controlsY + 22 + row * 20;
+
+            const keyBg = this.add.rectangle(cx + 28, cy + 8, 56, 18, 0x333333, 0.9).setStrokeStyle(1, 0x555555);
+            this.helpPanel.add(keyBg);
+            const key = this.add.text(cx + 28, cy + 8, ctrl[0], {
+                fontSize: '10px', fontFamily: 'Arial', color: '#ffffff', fontStyle: 'bold',
+            }).setOrigin(0.5);
+            this.helpPanel.add(key);
+
+            const action = this.add.text(cx + 64, cy + 8, ctrl[1], {
+                fontSize: '11px', fontFamily: 'Arial', color: '#aaaaaa',
+            }).setOrigin(0, 0.5);
+            this.helpPanel.add(action);
+        });
+
+        // Dismiss prompt
+        const dismissY = py + panelH - 28;
+        const dismiss = this.add.text(400, dismissY, 'Press H or click anywhere to start playing', {
+            fontSize: '12px', fontFamily: 'Arial', color: '#666666',
+        }).setOrigin(0.5);
+        this.helpPanel.add(dismiss);
+
+        // Click overlay to dismiss
+        overlay.on('pointerdown', () => {
+            this._hideHelp();
+        });
+    }
+
+    _hideHelp() {
+        this.helpOpen = false;
+        if (this.helpPanel) {
+            this.helpPanel.destroy();
+            this.helpPanel = null;
         }
     }
 }
