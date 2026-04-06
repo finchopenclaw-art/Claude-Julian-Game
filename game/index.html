@@ -23,6 +23,9 @@
             height: 600,
             parent: document.body,
             backgroundColor: '#1a1a2e',
+            input: {
+                topOnly: false  // Allow both WorldScene and UIScene to receive pointer events
+            },
             physics: {
                 default: 'arcade',
                 arcade: { debug: false }

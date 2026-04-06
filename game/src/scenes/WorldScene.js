@@ -121,10 +121,14 @@ export class WorldScene extends Phaser.Scene {
         });
 
         // --- Mouse input (unified handler) ---
+        // Use gameobject pointer to avoid conflicts with UI scene
         this.input.on('pointerdown', (pointer) => {
             // Don't process clicks if UI panels are open
             const ui = this.scene.get('UI');
-            if (ui.inventoryOpen || ui.craftingOpen) return;
+            if (ui.inventoryOpen || ui.craftingOpen || ui.helpOpen) return;
+
+            // Ignore clicks on the hotbar area (bottom 72px)
+            if (pointer.y > this.cameras.main.height - 72) return;
 
             if (pointer.leftButtonDown()) {
                 if (this.buildSystem.active) {
