@@ -78,7 +78,7 @@ export class BuildSystem {
         // Collide with player
         this.scene.physics.add.collider(this.scene.player, sprite);
 
-        const block = { sprite, tileX, tileY, itemId: this.currentItemId };
+        const block = { sprite, tileX, tileY, itemId: this.currentItemId, open: false };
         this.placedBlocks.push(block);
 
         // Exit build mode if no more items
@@ -110,6 +110,30 @@ export class BuildSystem {
             block.sprite.destroy();
             this.placedBlocks.splice(i, 1);
             this.inventory.addItem(block.itemId, 1);
+            return true;
+        }
+        return false;
+    }
+
+    tryToggleDoor(playerX, playerY) {
+        const maxDist = 48 + TILE_SIZE;
+
+        for (const block of this.placedBlocks) {
+            if (block.itemId !== 'WoodDoor') continue;
+            const bx = block.tileX * TILE_SIZE + TILE_SIZE / 2;
+            const by = block.tileY * TILE_SIZE + TILE_SIZE / 2;
+            const dist = Phaser.Math.Distance.Between(playerX, playerY, bx, by);
+            if (dist > maxDist) continue;
+
+            // Toggle open/closed
+            block.open = !block.open;
+            if (block.open) {
+                block.sprite.setTexture('woodDoorOpen');
+                block.sprite.body.enable = false; // no collision when open
+            } else {
+                block.sprite.setTexture('woodDoor');
+                block.sprite.body.enable = true;
+            }
             return true;
         }
         return false;

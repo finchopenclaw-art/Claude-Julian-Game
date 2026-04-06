@@ -83,6 +83,16 @@ export class BootScene extends Phaser.Scene {
         doorGfx.generateTexture('woodDoor', TILE_SIZE, TILE_SIZE);
         doorGfx.destroy();
 
+        // Open door texture (thin frame, mostly transparent)
+        const doorOpenGfx = this.make.graphics({ add: false });
+        doorOpenGfx.fillStyle(0x9b7420, 0.4);
+        doorOpenGfx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        doorOpenGfx.fillStyle(0x7a5a10, 1);
+        doorOpenGfx.fillRect(0, 0, 4, TILE_SIZE);   // left edge
+        doorOpenGfx.fillRect(TILE_SIZE - 4, 0, 4, TILE_SIZE); // right edge
+        doorOpenGfx.generateTexture('woodDoorOpen', TILE_SIZE, TILE_SIZE);
+        doorOpenGfx.destroy();
+
         // Fence texture (vertical posts with horizontal bar)
         const fenceGfx = this.make.graphics({ add: false });
         fenceGfx.fillStyle(0xa08040, 1);

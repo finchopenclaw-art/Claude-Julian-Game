@@ -115,13 +115,7 @@ export class WorldScene extends Phaser.Scene {
 
         // --- Gather input (E key) ---
         this.input.keyboard.on('keydown-E', () => {
-            // Try to eat if holding a consumable
-            const selectedItem = this.inventory.getSelectedItem();
-            if (selectedItem && ItemDefs[selectedItem]?.category === 'Consumable') {
-                if (this.survivalSystem.tryEat(selectedItem)) return;
-            }
-            // Otherwise try to gather
-            this.gatherSystem.tryGather(this.time.now);
+            this.doInteract();
         });
 
         // --- Mouse input (unified handler) ---
@@ -189,6 +183,18 @@ export class WorldScene extends Phaser.Scene {
         }
     }
 
+    doInteract() {
+        // Try to toggle a nearby door
+        if (this.buildSystem.tryToggleDoor(this.player.x, this.player.y)) return;
+        // Try to eat if holding a consumable
+        const selectedItem = this.inventory.getSelectedItem();
+        if (selectedItem && ItemDefs[selectedItem]?.category === 'Consumable') {
+            if (this.survivalSystem.tryEat(selectedItem)) return;
+        }
+        // Otherwise try to gather
+        this.gatherSystem.tryGather(this.time.now);
+    }
+
     saveGame() {
         const save = {
             player: { x: this.player.x, y: this.player.y },
@@ -199,7 +205,7 @@ export class WorldScene extends Phaser.Scene {
                 hunger: this.survivalSystem.hunger,
             },
             blocks: this.buildSystem.placedBlocks.map(b => ({
-                tileX: b.tileX, tileY: b.tileY, itemId: b.itemId,
+                tileX: b.tileX, tileY: b.tileY, itemId: b.itemId, open: b.open || false,
             })),
             nodes: this.gatherSystem.nodes.map(n => ({
                 active: n.active,
@@ -275,7 +281,12 @@ export class WorldScene extends Phaser.Scene {
                 sprite.setDepth(4);
                 sprite.refreshBody();
                 this.physics.add.collider(this.player, sprite);
-                this.buildSystem.placedBlocks.push({ sprite, tileX: b.tileX, tileY: b.tileY, itemId: b.itemId });
+                const block = { sprite, tileX: b.tileX, tileY: b.tileY, itemId: b.itemId, open: b.open || false };
+                if (block.open && block.itemId === 'WoodDoor') {
+                    sprite.setTexture('woodDoorOpen');
+                    sprite.body.enable = false;
+                }
+                this.buildSystem.placedBlocks.push(block);
             }
         }
 

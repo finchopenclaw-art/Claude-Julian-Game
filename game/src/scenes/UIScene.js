@@ -585,15 +585,10 @@ export class UIScene extends Phaser.Scene {
         const actX = 720;
         const actY = 400;
 
-        // Gather / Eat button
+        // Gather / Eat / Door button
         const gatherBtn = this._touchBtn(actX, actY, 64, 64, 'E', 0x2a7a2a);
         gatherBtn.bg.on('pointerdown', () => {
-            const ws = this.scene.get('World');
-            const selectedItem = ws.inventory.getSelectedItem();
-            if (selectedItem && ItemDefs[selectedItem]?.category === 'Consumable') {
-                if (ws.survivalSystem.tryEat(selectedItem)) return;
-            }
-            ws.gatherSystem.tryGather(ws.time.now);
+            this.scene.get('World').doInteract();
         });
 
         // Place / Remove button
