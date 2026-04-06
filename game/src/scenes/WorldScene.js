@@ -3,6 +3,8 @@ import { MAP_DATA, RESOURCE_NODES, PLAYER_SPAWN, TILE_SIZE, MAP_WIDTH, MAP_HEIGH
 import { Inventory } from '../systems/Inventory.js';
 import { GatherSystem } from '../systems/GatherSystem.js';
 import { CraftSystem } from '../systems/CraftSystem.js';
+import { BuildSystem } from '../systems/BuildSystem.js';
+import { ItemDefs } from '../data/ItemDefs.js';
 
 export class WorldScene extends Phaser.Scene {
     constructor() { super('World'); }
@@ -88,17 +90,44 @@ export class WorldScene extends Phaser.Scene {
         // --- Craft System ---
         this.craftSystem = new CraftSystem(this.inventory);
 
+        // --- Build System ---
+        this.buildSystem = new BuildSystem(this, this.inventory);
+
+        // Enter build mode when selecting a Buildable item
+        this.inventory.onChange(() => {
+            const selectedItem = this.inventory.getSelectedItem();
+            if (selectedItem && ItemDefs[selectedItem]?.category === 'Buildable') {
+                this.buildSystem.enterBuildMode(selectedItem);
+            } else if (this.buildSystem.active) {
+                this.buildSystem.exitBuildMode();
+            }
+        });
+
         // --- Gather input (E key) ---
         this.input.keyboard.on('keydown-E', () => {
             this.gatherSystem.tryGather(this.time.now);
         });
 
-        // --- Click to gather ---
+        // --- Mouse input (unified handler) ---
         this.input.on('pointerdown', (pointer) => {
+            // Don't process clicks if UI panels are open
+            const ui = this.scene.get('UI');
+            if (ui.inventoryOpen || ui.craftingOpen) return;
+
             if (pointer.leftButtonDown()) {
-                this.gatherSystem.tryGather(this.time.now);
+                if (this.buildSystem.active) {
+                    this.buildSystem.tryPlace(pointer, this.cameras.main);
+                } else {
+                    this.gatherSystem.tryGather(this.time.now);
+                }
+            }
+            if (pointer.rightButtonDown()) {
+                this.buildSystem.tryRemove(this.player.x, this.player.y, pointer, this.cameras.main);
             }
         });
+
+        // Disable right-click context menu
+        this.input.mouse.disableContextMenu();
 
         // --- UI toggle keys ---
         this.input.keyboard.on('keydown-TAB', (event) => {
@@ -113,8 +142,9 @@ export class WorldScene extends Phaser.Scene {
         });
         this.input.keyboard.on('keydown-ESC', () => {
             const ui = this.scene.get('UI');
-            if (ui.inventoryOpen) ui.toggleInventory();
-            if (ui.craftingOpen) ui.toggleCrafting();
+            if (ui.craftingOpen) { ui.toggleCrafting(); return; }
+            if (ui.inventoryOpen) { ui.toggleInventory(); return; }
+            if (this.buildSystem.active) { this.buildSystem.exitBuildMode(); return; }
         });
 
         console.log('[WorldScene] Player spawned at', spawnX, spawnY);
@@ -140,5 +170,6 @@ export class WorldScene extends Phaser.Scene {
 
         this.player.setVelocity(vx * speed, vy * speed);
         this.gatherSystem.update(this.player.x, this.player.y, this.time.now);
+        this.buildSystem.update(this.input.activePointer, this.cameras.main);
     }
 }
