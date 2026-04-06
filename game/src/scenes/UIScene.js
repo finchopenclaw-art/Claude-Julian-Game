@@ -595,7 +595,12 @@ export class UIScene extends Phaser.Scene {
         const buildBtn = this._touchBtn(actX - 74, actY, 64, 64, 'Build', 0x2a4a7a);
         buildBtn.bg.on('pointerdown', () => {
             const ws = this.scene.get('World');
-            if (ws.buildSystem.active) {
+            // Auto-enter build mode if holding a Buildable item
+            const selectedItem = ws.inventory.getSelectedItem();
+            if (selectedItem && ItemDefs[selectedItem]?.category === 'Buildable') {
+                if (!ws.buildSystem.active) {
+                    ws.buildSystem.enterBuildMode(selectedItem);
+                }
                 ws.buildSystem.tryPlaceAtPlayer();
             }
         });
