@@ -1,6 +1,7 @@
 // game/src/scenes/WorldScene.js
 import { MAP_DATA, RESOURCE_NODES, PLAYER_SPAWN, TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, TileProps } from '../data/TileConfig.js';
 import { Inventory } from '../systems/Inventory.js';
+import { GatherSystem } from '../systems/GatherSystem.js';
 
 export class WorldScene extends Phaser.Scene {
     constructor() { super('World'); }
@@ -77,6 +78,24 @@ export class WorldScene extends Phaser.Scene {
             });
         }
 
+        // --- Gather System ---
+        this.gatherSystem = new GatherSystem(this, this.inventory);
+        for (const node of RESOURCE_NODES) {
+            this.gatherSystem.spawnNode(node.type, node.tileX, node.tileY, TILE_SIZE);
+        }
+
+        // --- Gather input (E key) ---
+        this.input.keyboard.on('keydown-E', () => {
+            this.gatherSystem.tryGather(this.time.now);
+        });
+
+        // --- Click to gather ---
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.leftButtonDown()) {
+                this.gatherSystem.tryGather(this.time.now);
+            }
+        });
+
         console.log('[WorldScene] Player spawned at', spawnX, spawnY);
         this.scene.launch('UI');
     }
@@ -99,5 +118,6 @@ export class WorldScene extends Phaser.Scene {
         }
 
         this.player.setVelocity(vx * speed, vy * speed);
+        this.gatherSystem.update(this.player.x, this.player.y, this.time.now);
     }
 }
