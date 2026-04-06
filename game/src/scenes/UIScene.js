@@ -16,7 +16,7 @@ export class UIScene extends Phaser.Scene {
         const HOTBAR_SLOTS = 8;
         const hotbarWidth = HOTBAR_SLOTS * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP;
         const hotbarX = (this.cameras.main.width - hotbarWidth) / 2;
-        const hotbarY = this.cameras.main.height - SLOT_SIZE - 30;
+        const hotbarY = this.cameras.main.height - SLOT_SIZE - 60;
 
         for (let i = 0; i < HOTBAR_SLOTS; i++) {
             const x = hotbarX + i * (SLOT_SIZE + SLOT_GAP);
@@ -540,7 +540,7 @@ export class UIScene extends Phaser.Scene {
 
         // ===== D-PAD (bottom-left, above hotbar) =====
         const padX = 80;
-        const padY = 450;
+        const padY = 410;
 
         // Up
         const upBtn = this._touchBtn(padX, padY - B - G, B, B, '\u25B2', 0x444444);
@@ -568,7 +568,7 @@ export class UIScene extends Phaser.Scene {
 
         // ===== ACTION BUTTONS (bottom-right) =====
         const actX = 720;
-        const actY = 440;
+        const actY = 400;
 
         // Gather / Eat button
         const gatherBtn = this._touchBtn(actX, actY, 64, 64, 'E', 0x2a7a2a);
