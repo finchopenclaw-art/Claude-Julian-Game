@@ -89,7 +89,18 @@ export class UIScene extends Phaser.Scene {
         this.craftingOpen = false;
 
         // --- Listen for inventory changes ---
-        this.inventory.onChange(() => this.refreshHotbar());
+        this.inventory.onChange(() => {
+            this.refreshHotbar();
+            // Refresh open panels so recipes/items stay current
+            if (this.craftingOpen) {
+                this._hideCraftingPanel();
+                this._showCraftingPanel();
+            }
+            if (this.inventoryOpen) {
+                this._hideInventoryPanel();
+                this._showInventoryPanel();
+            }
+        });
         this.refreshHotbar();
 
         console.log('[UIScene] HUD ready');
