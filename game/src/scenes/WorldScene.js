@@ -171,8 +171,119 @@ export class WorldScene extends Phaser.Scene {
             if (this.buildSystem.active) { this.buildSystem.exitBuildMode(); return; }
         });
 
+        // --- Save/Load ---
+        this.input.keyboard.on('keydown-P', () => {
+            this.saveGame();
+        });
+        this.input.keyboard.on('keydown-L', () => {
+            this.loadGame();
+        });
+
         console.log('[WorldScene] Player spawned at', spawnX, spawnY);
         this.scene.launch('UI');
+
+        // Auto-load if save exists
+        if (localStorage.getItem('survivalSave')) {
+            this.loadGame();
+            console.log('[WorldScene] Save loaded');
+        }
+    }
+
+    saveGame() {
+        const save = {
+            player: { x: this.player.x, y: this.player.y },
+            inventory: this.inventory.slots.map(s => s ? { itemId: s.itemId, quantity: s.quantity } : null),
+            selectedSlot: this.inventory.selectedSlot,
+            survival: {
+                health: this.survivalSystem.health,
+                hunger: this.survivalSystem.hunger,
+            },
+            blocks: this.buildSystem.placedBlocks.map(b => ({
+                tileX: b.tileX, tileY: b.tileY, itemId: b.itemId,
+            })),
+            nodes: this.gatherSystem.nodes.map(n => ({
+                active: n.active,
+                hp: n.getData('hp'),
+            })),
+        };
+        localStorage.setItem('survivalSave', JSON.stringify(save));
+
+        // Flash save feedback
+        const txt = this.add.text(this.player.x, this.player.y - 40, 'Game Saved!', {
+            fontSize: '16px', fontFamily: 'Arial', color: '#4ade80',
+            stroke: '#000000', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(200);
+        this.tweens.add({
+            targets: txt, y: txt.y - 30, alpha: 0, duration: 1200,
+            onComplete: () => txt.destroy(),
+        });
+    }
+
+    loadGame() {
+        const raw = localStorage.getItem('survivalSave');
+        if (!raw) return;
+        const save = JSON.parse(raw);
+
+        // Restore player position
+        this.player.setPosition(save.player.x, save.player.y);
+
+        // Restore inventory
+        this.inventory.slots = save.inventory.map(s => s ? { ...s } : null);
+        this.inventory.selectedSlot = save.selectedSlot || 0;
+        this.inventory._notify();
+
+        // Restore survival
+        this.survivalSystem.health = save.survival.health;
+        this.survivalSystem.hunger = save.survival.hunger;
+        this.survivalSystem.lastHungerTick = this.time.now;
+        this.survivalSystem.lastStarveTick = this.time.now;
+
+        // Restore resource node states
+        if (save.nodes) {
+            save.nodes.forEach((ns, i) => {
+                if (i >= this.gatherSystem.nodes.length) return;
+                const node = this.gatherSystem.nodes[i];
+                node.setData('hp', ns.hp);
+                if (!ns.active) {
+                    node.setActive(false).setVisible(false);
+                    node.body.enable = false;
+                    // Schedule respawn
+                    const type = node.getData('type');
+                    const maxHp = node.getData('maxHp');
+                    this.time.delayedCall(5000, () => {
+                        node.setData('hp', maxHp);
+                        node.setActive(true).setVisible(true);
+                        node.body.enable = true;
+                    });
+                }
+            });
+        }
+
+        // Restore placed blocks — clear existing first
+        for (const block of this.buildSystem.placedBlocks) {
+            block.sprite.destroy();
+        }
+        this.buildSystem.placedBlocks = [];
+
+        if (save.blocks) {
+            for (const b of save.blocks) {
+                const def = ItemDefs[b.itemId];
+                if (!def) continue;
+                const snapX = b.tileX * TILE_SIZE + TILE_SIZE / 2;
+                const snapY = b.tileY * TILE_SIZE + TILE_SIZE / 2;
+                const sprite = this.physics.add.staticSprite(snapX, snapY, def.buildModelKey || 'ghost');
+                sprite.setDepth(4);
+                sprite.refreshBody();
+                this.physics.add.collider(this.player, sprite);
+                this.buildSystem.placedBlocks.push({ sprite, tileX: b.tileX, tileY: b.tileY, itemId: b.itemId });
+            }
+        }
+
+        // Clear death state if loading a non-dead save
+        if (this.deathText) {
+            this.deathText.destroy();
+            this.deathText = null;
+        }
     }
 
     update() {

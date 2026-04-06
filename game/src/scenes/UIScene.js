@@ -411,8 +411,9 @@ export class UIScene extends Phaser.Scene {
             ['1-8', 'Select hotbar slot'],
             ['Left Click', 'Place block'],
             ['Right Click', 'Remove block'],
+            ['P', 'Save game'],
+            ['L', 'Load game'],
             ['H', 'Toggle this help'],
-            ['Esc', 'Close menus'],
         ];
 
         const col1X = px + 40;
