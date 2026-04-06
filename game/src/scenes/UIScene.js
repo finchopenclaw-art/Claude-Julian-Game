@@ -88,6 +88,13 @@ export class UIScene extends Phaser.Scene {
         this.craftingPanel = null;
         this.craftingOpen = false;
 
+        // --- Touch controls (only on touch devices) ---
+        this.touchDir = { x: 0, y: 0 };
+        this.isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+        if (this.isTouch) {
+            this._createTouchControls();
+        }
+
         // --- Help overlay (shown on start) ---
         this.helpPanel = null;
         this.helpOpen = false;
@@ -457,6 +464,151 @@ export class UIScene extends Phaser.Scene {
         if (this.helpPanel) {
             this.helpPanel.destroy();
             this.helpPanel = null;
+        }
+    }
+
+    // --- Touch Controls ---
+
+    _touchBtn(x, y, w, h, label, color, depth = 500) {
+        const bg = this.add.rectangle(x, y, w, h, color, 0.5)
+            .setStrokeStyle(2, 0xffffff, 0.3)
+            .setDepth(depth)
+            .setScrollFactor(0)
+            .setInteractive();
+        const txt = this.add.text(x, y, label, {
+            fontSize: '14px', fontFamily: 'Arial', color: '#ffffff',
+            stroke: '#000000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(depth + 1).setScrollFactor(0);
+        return { bg, txt };
+    }
+
+    _createTouchControls() {
+        const B = 56; // button size
+        const G = 6;  // gap
+
+        // ===== D-PAD (bottom-left) =====
+        const padX = 80;
+        const padY = 480;
+
+        // Up
+        const upBtn = this._touchBtn(padX, padY - B - G, B, B, '\u25B2', 0x444444);
+        upBtn.bg.on('pointerdown', () => { this.touchDir.y = -1; });
+        upBtn.bg.on('pointerup', () => { this.touchDir.y = 0; });
+        upBtn.bg.on('pointerout', () => { this.touchDir.y = 0; });
+
+        // Down
+        const downBtn = this._touchBtn(padX, padY + B + G, B, B, '\u25BC', 0x444444);
+        downBtn.bg.on('pointerdown', () => { this.touchDir.y = 1; });
+        downBtn.bg.on('pointerup', () => { this.touchDir.y = 0; });
+        downBtn.bg.on('pointerout', () => { this.touchDir.y = 0; });
+
+        // Left
+        const leftBtn = this._touchBtn(padX - B - G, padY, B, B, '\u25C0', 0x444444);
+        leftBtn.bg.on('pointerdown', () => { this.touchDir.x = -1; });
+        leftBtn.bg.on('pointerup', () => { this.touchDir.x = 0; });
+        leftBtn.bg.on('pointerout', () => { this.touchDir.x = 0; });
+
+        // Right
+        const rightBtn = this._touchBtn(padX + B + G, padY, B, B, '\u25B6', 0x444444);
+        rightBtn.bg.on('pointerdown', () => { this.touchDir.x = 1; });
+        rightBtn.bg.on('pointerup', () => { this.touchDir.x = 0; });
+        rightBtn.bg.on('pointerout', () => { this.touchDir.x = 0; });
+
+        // ===== ACTION BUTTONS (bottom-right) =====
+        const actX = 720;
+        const actY = 470;
+
+        // Gather / Eat button
+        const gatherBtn = this._touchBtn(actX, actY, 64, 64, 'E', 0x2a7a2a);
+        gatherBtn.bg.on('pointerdown', () => {
+            const ws = this.scene.get('World');
+            const selectedItem = ws.inventory.getSelectedItem();
+            if (selectedItem && ItemDefs[selectedItem]?.category === 'Consumable') {
+                if (ws.survivalSystem.tryEat(selectedItem)) return;
+            }
+            ws.gatherSystem.tryGather(ws.time.now);
+        });
+
+        // Place / Remove button
+        const buildBtn = this._touchBtn(actX - 74, actY, 64, 64, 'Build', 0x2a4a7a);
+        buildBtn.bg.on('pointerdown', () => {
+            const ws = this.scene.get('World');
+            if (ws.buildSystem.active) {
+                ws.buildSystem.tryPlace(ws.input.activePointer, ws.cameras.main);
+            }
+        });
+
+        // Remove block button
+        const removeBtn = this._touchBtn(actX, actY - 74, 64, 64, 'Break', 0x7a2a2a);
+        removeBtn.bg.on('pointerdown', () => {
+            const ws = this.scene.get('World');
+            ws.buildSystem.tryRemove(
+                ws.player.x, ws.player.y,
+                ws.input.activePointer, ws.cameras.main
+            );
+        });
+
+        // ===== TOP MENU BUTTONS =====
+        const topY = 18;
+        const btnH = 32;
+        const btnW = 52;
+
+        // Crafting
+        const craftBtn = this._touchBtn(800 - 30, topY + btnH / 2, btnW, btnH, 'C', 0x555555);
+        craftBtn.bg.on('pointerdown', () => { this.toggleCrafting(); });
+
+        // Inventory
+        const invBtn = this._touchBtn(800 - 30 - btnW - 6, topY + btnH / 2, btnW, btnH, 'Inv', 0x555555);
+        invBtn.bg.on('pointerdown', () => { this.toggleInventory(); });
+
+        // Menu (Save/Load/Help)
+        const menuBtn = this._touchBtn(800 - 30 - (btnW + 6) * 2, topY + btnH / 2, btnW, btnH, '\u2630', 0x555555);
+        this.touchMenu = null;
+        this.touchMenuOpen = false;
+        menuBtn.bg.on('pointerdown', () => {
+            if (this.touchMenuOpen) {
+                this._hideTouchMenu();
+            } else {
+                this._showTouchMenu(menuBtn.bg.x, menuBtn.bg.y + btnH / 2 + 6);
+            }
+        });
+    }
+
+    _showTouchMenu(x, y) {
+        this.touchMenuOpen = true;
+        this.touchMenu = this.add.container(0, 0).setDepth(510);
+
+        const items = [
+            { label: 'Save', action: () => this.scene.get('World').saveGame() },
+            { label: 'Load', action: () => this.scene.get('World').loadGame() },
+            { label: 'Help', action: () => this.toggleHelp() },
+        ];
+
+        const mw = 80;
+        const mh = 36;
+        items.forEach((item, i) => {
+            const iy = y + i * (mh + 4);
+            const bg = this.add.rectangle(x, iy + mh / 2, mw, mh, 0x333333, 0.9)
+                .setStrokeStyle(1, 0x666666)
+                .setDepth(511)
+                .setInteractive();
+            const txt = this.add.text(x, iy + mh / 2, item.label, {
+                fontSize: '13px', fontFamily: 'Arial', color: '#ffffff',
+            }).setOrigin(0.5).setDepth(512);
+            bg.on('pointerdown', () => {
+                item.action();
+                this._hideTouchMenu();
+            });
+            this.touchMenu.add(bg);
+            this.touchMenu.add(txt);
+        });
+    }
+
+    _hideTouchMenu() {
+        this.touchMenuOpen = false;
+        if (this.touchMenu) {
+            this.touchMenu.destroy();
+            this.touchMenu = null;
         }
     }
 }

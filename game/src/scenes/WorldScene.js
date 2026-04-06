@@ -302,10 +302,18 @@ export class WorldScene extends Phaser.Scene {
         let vx = 0;
         let vy = 0;
 
+        // Keyboard input
         if (this.keys.A.isDown || this.keys.LEFT.isDown) vx = -1;
         else if (this.keys.D.isDown || this.keys.RIGHT.isDown) vx = 1;
         if (this.keys.W.isDown || this.keys.UP.isDown) vy = -1;
         else if (this.keys.S.isDown || this.keys.DOWN.isDown) vy = 1;
+
+        // Touch D-pad input (merge with keyboard)
+        const ui = this.scene.get('UI');
+        if (ui && ui.touchDir) {
+            if (ui.touchDir.x !== 0) vx = ui.touchDir.x;
+            if (ui.touchDir.y !== 0) vy = ui.touchDir.y;
+        }
 
         // Normalize diagonal movement
         if (vx !== 0 && vy !== 0) {
