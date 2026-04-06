@@ -424,9 +424,15 @@ export class UIScene extends Phaser.Scene {
         }).setOrigin(0.5, 0);
         this.helpPanel.add(goal);
 
-        // Gameplay steps
+        // Gameplay steps — adapt text for touch vs keyboard
         const stepsY = goalY + 32;
-        const steps = [
+        const touch = this.isTouch;
+        const steps = touch ? [
+            { icon: '1', title: 'GATHER', desc: 'Walk near trees/rocks using the D-pad, tap the green E button' },
+            { icon: '2', title: 'CRAFT', desc: 'Tap C (top-right) to open crafting. Tap recipes to craft them' },
+            { icon: '3', title: 'BUILD', desc: 'Tap a block in the hotbar, then tap Build to place it' },
+            { icon: '4', title: 'SURVIVE', desc: 'Hunger drains over time. Tap food in hotbar, tap E to eat' },
+        ] : [
             { icon: '1', title: 'GATHER', desc: 'Walk near trees or rocks and press E to collect Wood and Stone' },
             { icon: '2', title: 'CRAFT', desc: 'Press C to open crafting. Make planks, tools, and building blocks' },
             { icon: '3', title: 'BUILD', desc: 'Select a block in hotbar, then left-click to place it in the world' },
@@ -464,7 +470,16 @@ export class UIScene extends Phaser.Scene {
         }).setOrigin(0.5, 0);
         this.helpPanel.add(controlsTitle);
 
-        const controls = [
+        const controls = touch ? [
+            ['D-pad', 'Move around'],
+            ['E btn', 'Gather / Eat'],
+            ['Build btn', 'Place block'],
+            ['Break btn', 'Remove block'],
+            ['Hotbar', 'Tap to select'],
+            ['C btn', 'Open crafting'],
+            ['Inv btn', 'Open inventory'],
+            ['\u2630 Menu', 'Save / Load / Help'],
+        ] : [
             ['WASD', 'Move'],
             ['E', 'Gather / Eat'],
             ['C', 'Crafting'],
@@ -485,14 +500,14 @@ export class UIScene extends Phaser.Scene {
             const cx = col === 0 ? col1X : col2X;
             const cy = controlsY + 22 + row * 20;
 
-            const keyBg = this.add.rectangle(cx + 28, cy + 8, 56, 18, 0x333333, 0.9).setStrokeStyle(1, 0x555555);
+            const keyBg = this.add.rectangle(cx + 28, cy + 8, 60, 18, 0x333333, 0.9).setStrokeStyle(1, 0x555555);
             this.helpPanel.add(keyBg);
             const key = this.add.text(cx + 28, cy + 8, ctrl[0], {
-                fontSize: '10px', fontFamily: 'Arial', color: '#ffffff', fontStyle: 'bold',
+                fontSize: '9px', fontFamily: 'Arial', color: '#ffffff', fontStyle: 'bold',
             }).setOrigin(0.5);
             this.helpPanel.add(key);
 
-            const action = this.add.text(cx + 64, cy + 8, ctrl[1], {
+            const action = this.add.text(cx + 66, cy + 8, ctrl[1], {
                 fontSize: '11px', fontFamily: 'Arial', color: '#aaaaaa',
             }).setOrigin(0, 0.5);
             this.helpPanel.add(action);
@@ -500,7 +515,7 @@ export class UIScene extends Phaser.Scene {
 
         // Dismiss prompt
         const dismissY = py + panelH - 28;
-        const dismiss = this.add.text(400, dismissY, 'Press H or click anywhere to start playing', {
+        const dismiss = this.add.text(400, dismissY, touch ? 'Tap anywhere to start playing' : 'Press H or click anywhere to start playing', {
             fontSize: '12px', fontFamily: 'Arial', color: '#666666',
         }).setOrigin(0.5);
         this.helpPanel.add(dismiss);
