@@ -95,11 +95,22 @@ export class BuildSystem {
         const playerTileX = Math.floor(this.scene.player.x / TILE_SIZE);
         const playerTileY = Math.floor(this.scene.player.y / TILE_SIZE);
 
-        // Try tiles around the player: right, left, down, up, then diagonals
-        const offsets = [
-            [1, 0], [-1, 0], [0, 1], [0, -1],
-            [1, 1], [-1, 1], [1, -1], [-1, -1],
-        ];
+        // Use facing direction from WorldScene
+        const fx = this.scene.facingX || 1;
+        const fy = this.scene.facingY || 0;
+
+        // Try facing tile first, then adjacent tiles as fallback
+        const offsets = [];
+        // Primary: the tile we're facing
+        if (fx !== 0 || fy !== 0) {
+            offsets.push([fx, fy]);
+        }
+        // Fallbacks: cardinal directions, then diagonals
+        for (const o of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]) {
+            if (!offsets.some(e => e[0] === o[0] && e[1] === o[1])) {
+                offsets.push(o);
+            }
+        }
 
         for (const [dx, dy] of offsets) {
             const tileX = playerTileX + dx;

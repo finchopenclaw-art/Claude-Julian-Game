@@ -71,6 +71,8 @@ export class WorldScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.wallGroup);
 
         this.moveSpeed = 150;
+        this.facingX = 1;  // default facing right
+        this.facingY = 0;
 
         // --- Inventory ---
         this.inventory = new Inventory(20);
@@ -331,6 +333,12 @@ export class WorldScene extends Phaser.Scene {
             const diag = Math.SQRT1_2; // ~0.707
             vx *= diag;
             vy *= diag;
+        }
+
+        // Track facing direction for touch placement
+        if (vx !== 0 || vy !== 0) {
+            this.facingX = Math.sign(vx);
+            this.facingY = Math.sign(vy);
         }
 
         this.player.setVelocity(vx * speed, vy * speed);
