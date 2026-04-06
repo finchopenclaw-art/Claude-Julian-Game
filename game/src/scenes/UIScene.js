@@ -125,4 +125,88 @@ export class UIScene extends Phaser.Scene {
     update() {
         this.refreshHotbar();
     }
+
+    toggleInventory() {
+        if (this.craftingOpen) return; // don't open both
+        this.inventoryOpen = !this.inventoryOpen;
+        if (this.inventoryOpen) {
+            this._showInventoryPanel();
+        } else {
+            this._hideInventoryPanel();
+        }
+    }
+
+    _showInventoryPanel() {
+        const ITEM_COLORS = {
+            Wood: 0x8b6914, Stone: 0x888888, WoodPlank: 0xc4a35a,
+            StoneTool: 0xaaaaaa, WoodBlock: 0x8b6914, StoneBlock: 0x666666,
+            CookedMeat: 0xcc6633,
+        };
+
+        this.inventoryPanel = this.add.container(0, 0).setDepth(300);
+
+        // Dark overlay
+        const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.5);
+        this.inventoryPanel.add(overlay);
+
+        // Panel background
+        const COLS = 5;
+        const ROWS = 4;
+        const SLOT = 52;
+        const GAP = 4;
+        const panelW = COLS * (SLOT + GAP) + GAP + 20;
+        const panelH = ROWS * (SLOT + GAP) + GAP + 50;
+        const px = (800 - panelW) / 2;
+        const py = (600 - panelH) / 2;
+
+        const panelBg = this.add.rectangle(400, 300, panelW, panelH, 0x1a1a2e, 0.95);
+        panelBg.setStrokeStyle(2, 0x555555);
+        this.inventoryPanel.add(panelBg);
+
+        // Title
+        const title = this.add.text(400, py + 14, 'Inventory', {
+            fontSize: '16px', fontFamily: 'Arial', color: '#ffffff',
+        }).setOrigin(0.5, 0);
+        this.inventoryPanel.add(title);
+
+        // Slots
+        for (let i = 0; i < 20; i++) {
+            const col = i % COLS;
+            const row = Math.floor(i / COLS);
+            const sx = px + 10 + GAP + col * (SLOT + GAP) + SLOT / 2;
+            const sy = py + 40 + GAP + row * (SLOT + GAP) + SLOT / 2;
+
+            const slotBg = this.add.rectangle(sx, sy, SLOT, SLOT, 0x222222, 0.9);
+            slotBg.setStrokeStyle(1, 0x444444);
+            this.inventoryPanel.add(slotBg);
+
+            const slotData = this.inventory.getSlot(i);
+            if (slotData) {
+                const color = ITEM_COLORS[slotData.itemId] || 0xffffff;
+                const icon = this.add.rectangle(sx, sy, SLOT - 10, SLOT - 10, color, 1);
+                this.inventoryPanel.add(icon);
+
+                if (slotData.quantity > 1) {
+                    const qty = this.add.text(sx + SLOT / 2 - 6, sy + SLOT / 2 - 6, `${slotData.quantity}`, {
+                        fontSize: '12px', fontFamily: 'Arial', color: '#ffffff',
+                        stroke: '#000000', strokeThickness: 2,
+                    }).setOrigin(1, 1);
+                    this.inventoryPanel.add(qty);
+                }
+
+                // Item name tooltip on hover area
+                const nameTxt = this.add.text(sx, sy - SLOT / 2 + 4, ItemDefs[slotData.itemId]?.displayName || slotData.itemId, {
+                    fontSize: '9px', fontFamily: 'Arial', color: '#aaaaaa',
+                }).setOrigin(0.5, 0);
+                this.inventoryPanel.add(nameTxt);
+            }
+        }
+    }
+
+    _hideInventoryPanel() {
+        if (this.inventoryPanel) {
+            this.inventoryPanel.destroy();
+            this.inventoryPanel = null;
+        }
+    }
 }

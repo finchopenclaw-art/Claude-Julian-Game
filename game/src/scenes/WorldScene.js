@@ -96,6 +96,20 @@ export class WorldScene extends Phaser.Scene {
             }
         });
 
+        // --- UI toggle keys ---
+        this.input.keyboard.on('keydown-TAB', (event) => {
+            event.preventDefault();
+            this.scene.get('UI').toggleInventory();
+        });
+        this.input.keyboard.on('keydown-I', () => {
+            this.scene.get('UI').toggleInventory();
+        });
+        this.input.keyboard.on('keydown-ESC', () => {
+            const ui = this.scene.get('UI');
+            if (ui.inventoryOpen) ui.toggleInventory();
+            if (ui.craftingOpen) ui.toggleCrafting();
+        });
+
         console.log('[WorldScene] Player spawned at', spawnX, spawnY);
         this.scene.launch('UI');
     }
