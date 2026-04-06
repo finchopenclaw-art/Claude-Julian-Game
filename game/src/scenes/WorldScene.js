@@ -23,13 +23,66 @@ export class WorldScene extends Phaser.Scene {
         // --- Camera ---
         this.cameras.main.setBounds(0, 0, mapPixelW, mapPixelH);
 
-        // Placeholder: put a dot at player spawn so we can see the camera target
+        // --- Player ---
         const spawnX = PLAYER_SPAWN.tileX * TILE_SIZE + TILE_SIZE / 2;
         const spawnY = PLAYER_SPAWN.tileY * TILE_SIZE + TILE_SIZE / 2;
-        const dot = this.add.circle(spawnX, spawnY, 6, 0xff0000);
-        this.cameras.main.centerOn(spawnX, spawnY);
+        this.player = this.physics.add.sprite(spawnX, spawnY, 'player');
+        this.player.setCollideWorldBounds(true);
+        this.player.setDepth(10);
 
-        console.log('[WorldScene] Tilemap rendered:', MAP_WIDTH, 'x', MAP_HEIGHT);
+        // --- Camera follow ---
+        this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+
+        // --- Input ---
+        this.keys = this.input.keyboard.addKeys({
+            W: Phaser.Input.Keyboard.KeyCodes.W,
+            A: Phaser.Input.Keyboard.KeyCodes.A,
+            S: Phaser.Input.Keyboard.KeyCodes.S,
+            D: Phaser.Input.Keyboard.KeyCodes.D,
+        });
+
+        // --- Collision layer: invisible bodies on non-walkable tiles ---
+        this.wallGroup = this.physics.add.staticGroup();
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                const tileId = MAP_DATA[y][x];
+                if (!TileProps[tileId].walkable) {
+                    const wall = this.wallGroup.create(
+                        x * TILE_SIZE + TILE_SIZE / 2,
+                        y * TILE_SIZE + TILE_SIZE / 2,
+                        null
+                    );
+                    wall.setVisible(false);
+                    wall.body.setSize(TILE_SIZE, TILE_SIZE);
+                    wall.refreshBody();
+                }
+            }
+        }
+        this.physics.add.collider(this.player, this.wallGroup);
+
+        this.moveSpeed = 150;
+
+        console.log('[WorldScene] Player spawned at', spawnX, spawnY);
         this.scene.launch('UI');
+    }
+
+    update() {
+        const speed = this.moveSpeed;
+        let vx = 0;
+        let vy = 0;
+
+        if (this.keys.A.isDown) vx = -1;
+        else if (this.keys.D.isDown) vx = 1;
+        if (this.keys.W.isDown) vy = -1;
+        else if (this.keys.S.isDown) vy = 1;
+
+        // Normalize diagonal movement
+        if (vx !== 0 && vy !== 0) {
+            const diag = Math.SQRT1_2; // ~0.707
+            vx *= diag;
+            vy *= diag;
+        }
+
+        this.player.setVelocity(vx * speed, vy * speed);
     }
 }
