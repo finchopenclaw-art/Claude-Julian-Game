@@ -113,10 +113,11 @@ export class UIScene extends Phaser.Scene {
 
     refreshHotbar() {
         const ITEM_COLORS = {
-            Wood: 0x8b6914, Stone: 0x888888, WoodPlank: 0xc4a35a,
+            Wood: 0x8b6914, Stone: 0x888888, WoodPlank: 0xc4a35a, Stick: 0xb89050,
             StoneTool: 0xaaaaaa, WoodBlock: 0x8b6914, StoneBlock: 0x666666,
-            CookedMeat: 0xcc6633,
-            Berry: 0xcc2244,
+            WoodDoor: 0x9b7420, Fence: 0xa08040, Torch: 0xff8800,
+            Ladder: 0x8b6914, StoneBrick: 0x777777,
+            CookedMeat: 0xcc6633, Berry: 0xcc2244, BerryPie: 0xdd6688,
         };
 
         for (let i = 0; i < 8; i++) {
@@ -162,10 +163,11 @@ export class UIScene extends Phaser.Scene {
 
     _showInventoryPanel() {
         const ITEM_COLORS = {
-            Wood: 0x8b6914, Stone: 0x888888, WoodPlank: 0xc4a35a,
+            Wood: 0x8b6914, Stone: 0x888888, WoodPlank: 0xc4a35a, Stick: 0xb89050,
             StoneTool: 0xaaaaaa, WoodBlock: 0x8b6914, StoneBlock: 0x666666,
-            CookedMeat: 0xcc6633,
-            Berry: 0xcc2244,
+            WoodDoor: 0x9b7420, Fence: 0xa08040, Torch: 0xff8800,
+            Ladder: 0x8b6914, StoneBrick: 0x777777,
+            CookedMeat: 0xcc6633, Berry: 0xcc2244, BerryPie: 0xdd6688,
         };
 
         this.inventoryPanel = this.add.container(0, 0).setDepth(300);
@@ -255,7 +257,7 @@ export class UIScene extends Phaser.Scene {
 
         // Panel background
         const panelW = 360;
-        const panelH = 320;
+        const panelH = 540;
         const px = (800 - panelW) / 2;
         const py = (600 - panelH) / 2;
 
