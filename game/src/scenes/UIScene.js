@@ -591,12 +591,12 @@ export class UIScene extends Phaser.Scene {
             this.scene.get('World').doInteract();
         });
 
-        // Place / Remove button
+        // Place button — places block next to player on touch
         const buildBtn = this._touchBtn(actX - 74, actY, 64, 64, 'Build', 0x2a4a7a);
         buildBtn.bg.on('pointerdown', () => {
             const ws = this.scene.get('World');
             if (ws.buildSystem.active) {
-                ws.buildSystem.tryPlace(ws.input.activePointer, ws.cameras.main);
+                ws.buildSystem.tryPlaceAtPlayer();
             }
         });
 

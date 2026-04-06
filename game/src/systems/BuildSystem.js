@@ -89,6 +89,44 @@ export class BuildSystem {
         return true;
     }
 
+    tryPlaceAtPlayer() {
+        if (!this.active) return false;
+
+        const playerTileX = Math.floor(this.scene.player.x / TILE_SIZE);
+        const playerTileY = Math.floor(this.scene.player.y / TILE_SIZE);
+
+        // Try tiles around the player: right, left, down, up, then diagonals
+        const offsets = [
+            [1, 0], [-1, 0], [0, 1], [0, -1],
+            [1, 1], [-1, 1], [1, -1], [-1, -1],
+        ];
+
+        for (const [dx, dy] of offsets) {
+            const tileX = playerTileX + dx;
+            const tileY = playerTileY + dy;
+            if (!this._canPlace(tileX, tileY)) continue;
+            if (!this.inventory.removeItem(this.currentItemId, 1)) return false;
+
+            const snapX = tileX * TILE_SIZE + TILE_SIZE / 2;
+            const snapY = tileY * TILE_SIZE + TILE_SIZE / 2;
+
+            const def = ItemDefs[this.currentItemId];
+            const sprite = this.scene.physics.add.staticSprite(snapX, snapY, def.buildModelKey || 'ghost');
+            sprite.setDepth(4);
+            sprite.refreshBody();
+            this.scene.physics.add.collider(this.scene.player, sprite);
+
+            const block = { sprite, tileX, tileY, itemId: this.currentItemId, open: false };
+            this.placedBlocks.push(block);
+
+            if (!this.inventory.hasItem(this.currentItemId, 1)) {
+                this.exitBuildMode();
+            }
+            return true;
+        }
+        return false;
+    }
+
     tryRemove(playerX, playerY, pointer, camera) {
         const worldX = pointer.x + camera.scrollX;
         const worldY = pointer.y + camera.scrollY;
