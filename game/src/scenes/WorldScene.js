@@ -330,7 +330,6 @@ export class WorldScene extends Phaser.Scene {
         this.survivalSystem.update(this.time.now);
 
         // Update UI bars
-        const ui = this.scene.get('UI');
         if (ui && ui.updateSurvivalBars) {
             ui.updateSurvivalBars(
                 this.survivalSystem.health, this.survivalSystem.maxHealth,
