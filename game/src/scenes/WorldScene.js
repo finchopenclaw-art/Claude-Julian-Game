@@ -1,5 +1,6 @@
 // game/src/scenes/WorldScene.js
 import { MAP_DATA, RESOURCE_NODES, PLAYER_SPAWN, TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, TileProps } from '../data/TileConfig.js';
+import { Inventory } from '../systems/Inventory.js';
 
 export class WorldScene extends Phaser.Scene {
     constructor() { super('World'); }
@@ -61,6 +62,20 @@ export class WorldScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.wallGroup);
 
         this.moveSpeed = 150;
+
+        // --- Inventory ---
+        this.inventory = new Inventory(20);
+        // Starting loadout
+        this.inventory.addItem('CookedMeat', 3);
+        console.log('[WorldScene] Inventory ready, starting items:', this.inventory.countItem('CookedMeat'), 'CookedMeat');
+
+        // --- Hotbar keys ---
+        for (let i = 0; i < 8; i++) {
+            this.input.keyboard.on(`keydown-${i + 1}`, () => {
+                this.inventory.selectSlot(i);
+                console.log('[Hotbar] Selected slot', i, this.inventory.getSlot(i));
+            });
+        }
 
         console.log('[WorldScene] Player spawned at', spawnX, spawnY);
         this.scene.launch('UI');
