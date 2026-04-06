@@ -209,4 +209,91 @@ export class UIScene extends Phaser.Scene {
             this.inventoryPanel = null;
         }
     }
+
+    toggleCrafting() {
+        if (this.inventoryOpen) return; // don't open both
+        this.craftingOpen = !this.craftingOpen;
+        if (this.craftingOpen) {
+            this._showCraftingPanel();
+        } else {
+            this._hideCraftingPanel();
+        }
+    }
+
+    _showCraftingPanel() {
+        const craftSystem = this.worldScene.craftSystem;
+        this.craftingPanel = this.add.container(0, 0).setDepth(300);
+
+        // Dark overlay
+        const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.5);
+        this.craftingPanel.add(overlay);
+
+        // Panel background
+        const panelW = 360;
+        const panelH = 320;
+        const px = (800 - panelW) / 2;
+        const py = (600 - panelH) / 2;
+
+        const panelBg = this.add.rectangle(400, 300, panelW, panelH, 0x1a1a2e, 0.95);
+        panelBg.setStrokeStyle(2, 0x555555);
+        this.craftingPanel.add(panelBg);
+
+        // Title
+        const title = this.add.text(400, py + 14, 'Crafting', {
+            fontSize: '16px', fontFamily: 'Arial', color: '#ffffff',
+        }).setOrigin(0.5, 0);
+        this.craftingPanel.add(title);
+
+        // Recipe list
+        const recipes = craftSystem.getRecipes();
+        recipes.forEach((recipe, i) => {
+            const ry = py + 50 + i * 58;
+
+            // Recipe row background
+            const rowColor = recipe.craftable ? 0x2a3a2a : 0x2a2a2a;
+            const row = this.add.rectangle(400, ry + 20, panelW - 30, 50, rowColor, 0.9);
+            row.setStrokeStyle(1, recipe.craftable ? 0x4ade80 : 0x444444);
+            this.craftingPanel.add(row);
+
+            // Recipe name
+            const nameColor = recipe.craftable ? '#ffffff' : '#666666';
+            const name = this.add.text(px + 24, ry + 6, recipe.displayName, {
+                fontSize: '14px', fontFamily: 'Arial', color: nameColor, fontStyle: 'bold',
+            });
+            this.craftingPanel.add(name);
+
+            // Inputs text
+            const inputStr = Object.entries(recipe.inputs).map(([id, qty]) => `${qty} ${id}`).join(', ');
+            const inputTxt = this.add.text(px + 24, ry + 24, `Needs: ${inputStr}`, {
+                fontSize: '11px', fontFamily: 'Arial', color: recipe.craftable ? '#aaaaaa' : '#555555',
+            });
+            this.craftingPanel.add(inputTxt);
+
+            // Output text
+            const outputTxt = this.add.text(px + panelW - 24, ry + 14, `\u2192 ${recipe.outputQty} ${recipe.output}`, {
+                fontSize: '11px', fontFamily: 'Arial', color: recipe.craftable ? '#4ade80' : '#555555',
+            }).setOrigin(1, 0);
+            this.craftingPanel.add(outputTxt);
+
+            // Click to craft
+            if (recipe.craftable) {
+                row.setInteractive({ useHandCursor: true });
+                row.on('pointerdown', () => {
+                    craftSystem.craft(recipe.id);
+                    // Refresh panel
+                    this._hideCraftingPanel();
+                    this._showCraftingPanel();
+                });
+                row.on('pointerover', () => row.setFillStyle(0x3a4a3a, 0.9));
+                row.on('pointerout', () => row.setFillStyle(rowColor, 0.9));
+            }
+        });
+    }
+
+    _hideCraftingPanel() {
+        if (this.craftingPanel) {
+            this.craftingPanel.destroy();
+            this.craftingPanel = null;
+        }
+    }
 }

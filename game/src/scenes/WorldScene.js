@@ -2,6 +2,7 @@
 import { MAP_DATA, RESOURCE_NODES, PLAYER_SPAWN, TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, TileProps } from '../data/TileConfig.js';
 import { Inventory } from '../systems/Inventory.js';
 import { GatherSystem } from '../systems/GatherSystem.js';
+import { CraftSystem } from '../systems/CraftSystem.js';
 
 export class WorldScene extends Phaser.Scene {
     constructor() { super('World'); }
@@ -84,6 +85,9 @@ export class WorldScene extends Phaser.Scene {
             this.gatherSystem.spawnNode(node.type, node.tileX, node.tileY, TILE_SIZE);
         }
 
+        // --- Craft System ---
+        this.craftSystem = new CraftSystem(this.inventory);
+
         // --- Gather input (E key) ---
         this.input.keyboard.on('keydown-E', () => {
             this.gatherSystem.tryGather(this.time.now);
@@ -103,6 +107,9 @@ export class WorldScene extends Phaser.Scene {
         });
         this.input.keyboard.on('keydown-I', () => {
             this.scene.get('UI').toggleInventory();
+        });
+        this.input.keyboard.on('keydown-C', () => {
+            this.scene.get('UI').toggleCrafting();
         });
         this.input.keyboard.on('keydown-ESC', () => {
             const ui = this.scene.get('UI');
