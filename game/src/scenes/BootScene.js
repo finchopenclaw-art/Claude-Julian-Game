@@ -42,6 +42,17 @@ export class BootScene extends Phaser.Scene {
         rockGfx.generateTexture('rock', 32, 32);
         rockGfx.destroy();
 
+        // Berry bush texture (green with red dots)
+        const berryGfx = this.make.graphics({ add: false });
+        berryGfx.fillStyle(0x3a8a3a, 1);
+        berryGfx.fillRect(4, 6, 24, 20);
+        berryGfx.fillStyle(0xcc2244, 1);
+        berryGfx.fillCircle(10, 12, 3);
+        berryGfx.fillCircle(22, 14, 3);
+        berryGfx.fillCircle(15, 20, 3);
+        berryGfx.generateTexture('berryBush', 32, 32);
+        berryGfx.destroy();
+
         // Build block textures
         const woodBlockGfx = this.make.graphics({ add: false });
         woodBlockGfx.fillStyle(0x8b6914, 1);

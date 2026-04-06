@@ -7,4 +7,5 @@ export const ItemDefs = {
     WoodBlock:  { displayName: 'Wood Block', maxStack: 64, category: 'Buildable', buildModelKey: 'woodBlock' },
     StoneBlock: { displayName: 'Stone Block',maxStack: 64, category: 'Buildable', buildModelKey: 'stoneBlock' },
     CookedMeat: { displayName: 'Cooked Meat',maxStack: 16, category: 'Consumable', hungerRestore: 30 },
+    Berry:      { displayName: 'Berry',      maxStack: 32, category: 'Consumable', hungerRestore: 10 },
 };

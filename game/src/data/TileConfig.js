@@ -76,6 +76,13 @@ export const RESOURCE_NODES = [
     { type: 'Rock', tileX: 45, tileY: 30 },
     { type: 'Rock', tileX: 14, tileY: 42 },
     { type: 'Rock', tileX: 40, tileY: 44 },
+    // Berry bushes — renewable food source
+    { type: 'BerryBush', tileX: 9,  tileY: 8 },
+    { type: 'BerryBush', tileX: 16, tileY: 12 },
+    { type: 'BerryBush', tileX: 4,  tileY: 20 },
+    { type: 'BerryBush', tileX: 25, tileY: 30 },
+    { type: 'BerryBush', tileX: 38, tileY: 15 },
+    { type: 'BerryBush', tileX: 12, tileY: 38 },
 ];
 
 // Player spawn position (tile coordinates)

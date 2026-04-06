@@ -3,6 +3,7 @@
 const NODE_DEFS = {
     Tree: { textureKey: 'tree', hp: 3, dropItem: 'Wood', dropAmount: 2, respawnTime: 30000 },
     Rock: { textureKey: 'rock', hp: 5, dropItem: 'Stone', dropAmount: 1, respawnTime: 30000 },
+    BerryBush: { textureKey: 'berryBush', hp: 2, dropItem: 'Berry', dropAmount: 3, respawnTime: 15000 },
 };
 
 export class GatherSystem {

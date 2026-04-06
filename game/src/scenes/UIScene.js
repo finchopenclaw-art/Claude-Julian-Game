@@ -116,6 +116,7 @@ export class UIScene extends Phaser.Scene {
             Wood: 0x8b6914, Stone: 0x888888, WoodPlank: 0xc4a35a,
             StoneTool: 0xaaaaaa, WoodBlock: 0x8b6914, StoneBlock: 0x666666,
             CookedMeat: 0xcc6633,
+            Berry: 0xcc2244,
         };
 
         for (let i = 0; i < 8; i++) {
@@ -164,6 +165,7 @@ export class UIScene extends Phaser.Scene {
             Wood: 0x8b6914, Stone: 0x888888, WoodPlank: 0xc4a35a,
             StoneTool: 0xaaaaaa, WoodBlock: 0x8b6914, StoneBlock: 0x666666,
             CookedMeat: 0xcc6633,
+            Berry: 0xcc2244,
         };
 
         this.inventoryPanel = this.add.container(0, 0).setDepth(300);
