@@ -58,11 +58,16 @@ export class AnimalSystem {
         const group = new THREE.Group();
         group.position.set(x + 0.5, 0.5, z + 0.5);
 
+        // Positioning: legs touch ground (y=0 relative to group at ground surface)
+        const legH = 0.4;
+        const legY = legH / 2;              // leg center, bottom at y=0
+        const bodyY = legH + def.bodyH / 2; // body sits on top of legs
+
         // Body
         const bodyGeo = new THREE.BoxGeometry(def.bodyW, def.bodyH, def.bodyD);
         const bodyMat = new THREE.MeshLambertMaterial({ color: def.bodyColor });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
-        body.position.y = def.bodyH / 2 - 0.1;
+        body.position.y = bodyY;
         body.castShadow = true;
         group.add(body);
 
@@ -71,10 +76,10 @@ export class AnimalSystem {
             const spotGeo = new THREE.BoxGeometry(0.35, 0.3, 0.5);
             const spotMat = new THREE.MeshLambertMaterial({ color: def.spotColor });
             const spot1 = new THREE.Mesh(spotGeo, spotMat);
-            spot1.position.set(0.25, def.bodyH / 2, 0.2);
+            spot1.position.set(0.25, bodyY + 0.1, 0.2);
             group.add(spot1);
             const spot2 = new THREE.Mesh(spotGeo, spotMat);
-            spot2.position.set(-0.2, def.bodyH / 2 - 0.1, -0.3);
+            spot2.position.set(-0.2, bodyY, -0.3);
             group.add(spot2);
         }
 
@@ -83,18 +88,18 @@ export class AnimalSystem {
         const headGeo = new THREE.BoxGeometry(headSize, headSize, headSize);
         const headMat = new THREE.MeshLambertMaterial({ color: def.headColor });
         const head = new THREE.Mesh(headGeo, headMat);
-        head.position.set(0, def.bodyH / 2 + 0.05, def.bodyD / 2 + headSize / 2 - 0.05);
+        head.position.set(0, bodyY + 0.05, def.bodyD / 2 + headSize / 2 - 0.05);
         head.castShadow = true;
         group.add(head);
 
         // Legs (4 small boxes)
-        const legGeo = new THREE.BoxGeometry(0.15, 0.4, 0.15);
+        const legGeo = new THREE.BoxGeometry(0.15, legH, 0.15);
         const legMat = new THREE.MeshLambertMaterial({ color: def.bodyColor });
         const legOffsets = [
-            [-def.bodyW / 3, -0.3, def.bodyD / 3],
-            [def.bodyW / 3, -0.3, def.bodyD / 3],
-            [-def.bodyW / 3, -0.3, -def.bodyD / 3],
-            [def.bodyW / 3, -0.3, -def.bodyD / 3],
+            [-def.bodyW / 3, legY, def.bodyD / 3],
+            [def.bodyW / 3, legY, def.bodyD / 3],
+            [-def.bodyW / 3, legY, -def.bodyD / 3],
+            [def.bodyW / 3, legY, -def.bodyD / 3],
         ];
         for (const [lx, ly, lz] of legOffsets) {
             const leg = new THREE.Mesh(legGeo, legMat);
