@@ -128,14 +128,14 @@ export class WorldRenderer {
                     new THREE.BoxGeometry(0.8, 0.6, 0.8),
                     new THREE.MeshLambertMaterial({ color: vis.color })
                 );
-                rock.position.y = -0.2;
+                rock.position.y = 0.3;
                 group.add(rock);
             } else if (node.type === 'BerryBush') {
                 const bush = new THREE.Mesh(
                     new THREE.BoxGeometry(0.8, 0.7, 0.8),
                     new THREE.MeshLambertMaterial({ color: vis.color })
                 );
-                bush.position.y = -0.15;
+                bush.position.y = 0.35;
                 group.add(bush);
 
                 // Berry dots
@@ -152,7 +152,7 @@ export class WorldRenderer {
                     new THREE.BoxGeometry(0.9, 0.7, 0.9),
                     new THREE.MeshLambertMaterial({ color: vis.color })
                 );
-                ore.position.y = -0.15;
+                ore.position.y = 0.35;
                 group.add(ore);
 
                 // Ore spots
