@@ -51,8 +51,8 @@ export class DayNightCycle {
         const dayFactor = Math.max(0, sunHeight);
         this.sunLight.intensity = dayFactor * 0.9;
 
-        // Ambient light — never fully dark (moonlight)
-        this.ambientLight.intensity = 0.15 + dayFactor * 0.5;
+        // Ambient light — never fully dark (moonlight keeps things visible)
+        this.ambientLight.intensity = 0.3 + dayFactor * 0.4;
 
         // Sky color
         const skyColor = this._getSkyColor(t);
