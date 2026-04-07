@@ -66,4 +66,10 @@ export const RecipeDefs = {
         output: 'BerryPie',
         outputQty: 1,
     },
+    CookMeat: {
+        displayName: 'Cooked Meat',
+        inputs: { RawMeat: 1, Wood: 1 },
+        output: 'CookedMeat',
+        outputQty: 1,
+    },
 };

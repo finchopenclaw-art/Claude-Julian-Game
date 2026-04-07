@@ -9,6 +9,7 @@ import { GatherSystem3D } from './systems/GatherSystem3D.js';
 import { BuildSystem3D } from './systems/BuildSystem3D.js';
 import { ItemDefs } from './data/ItemDefs.js';
 import { HUD } from './ui/HUD.js';
+import { AnimalSystem } from './systems/AnimalSystem.js';
 import { DayNightCycle } from './world/DayNightCycle.js';
 
 // --- Scene setup ---
@@ -57,6 +58,9 @@ const craftSystem = new CraftSystem(inventory);
 const survivalSystem = new SurvivalSystem(inventory);
 const gatherSystem = new GatherSystem3D(inventory, resourceMeshes);
 const buildSystem = new BuildSystem3D(scene, worldData, worldRenderer, inventory);
+
+// --- Animals ---
+const animalSystem = new AnimalSystem(scene, worldData, inventory);
 
 // --- Day/Night Cycle ---
 const dayNight = new DayNightCycle(scene, sunLight, ambientLight);
@@ -178,6 +182,12 @@ function doInteract() {
     const result = gatherSystem.tryGather(playerPos, performance.now());
     if (result) {
         hud.showFloatText(`+${result.amount} ${result.item}`);
+        return;
+    }
+    // Harvest animal
+    const animalResult = animalSystem.tryHarvest(playerPos, performance.now());
+    if (animalResult) {
+        hud.showFloatText(animalResult);
     }
 }
 
@@ -303,6 +313,9 @@ function update() {
     // Day/night
     dayNight.update(dt);
 
+    // Animals
+    animalSystem.update(dt);
+
     // Camera rotation
     const euler = new THREE.Euler(pitch, yaw, 0, 'YXZ');
     camera.quaternion.setFromEuler(euler);
@@ -348,10 +361,13 @@ function update() {
     // Proximity hints
     const nearDoor = buildSystem.getNearestDoor(playerPos);
     const nearNode = gatherSystem.getNearestNode(playerPos);
+    const nearAnimal = animalSystem.getNearestAnimal(playerPos);
     if (nearDoor) {
         hud.showGatherInfo(`Press E to ${nearDoor.open ? 'close' : 'open'} door`);
     } else if (nearNode) {
         hud.showGatherInfo(`Press E to gather ${nearNode.userData.nodeData.type}`);
+    } else if (nearAnimal) {
+        hud.showGatherInfo(`Press E to harvest ${nearAnimal.type} (${nearAnimal.hp}/${nearAnimal.maxHp} HP)`);
     } else {
         hud.hideGatherInfo();
     }

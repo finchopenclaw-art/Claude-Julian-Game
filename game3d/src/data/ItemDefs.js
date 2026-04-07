@@ -15,4 +15,6 @@ export const ItemDefs = {
     CookedMeat: { displayName: 'Cooked Meat',maxStack: 16, category: 'Consumable', hungerRestore: 30 },
     Berry:      { displayName: 'Berry',      maxStack: 32, category: 'Consumable', hungerRestore: 10 },
     BerryPie:   { displayName: 'Berry Pie',  maxStack: 8,  category: 'Consumable', hungerRestore: 50 },
+    RawMeat:    { displayName: 'Raw Meat',   maxStack: 16, category: 'Resource' },
+    Leather:    { displayName: 'Leather',    maxStack: 32, category: 'Resource' },
 };

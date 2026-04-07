@@ -8,6 +8,7 @@ const ITEM_COLORS = {
     WoodDoor: '#9b7420', Fence: '#a08040', Torch: '#ff8800',
     Ladder: '#8b6914', StoneBrick: '#777',
     CookedMeat: '#cc6633', Berry: '#cc2244', BerryPie: '#dd6688',
+    RawMeat: '#aa4444', Leather: '#8b6040',
 };
 
 export class HUD {
