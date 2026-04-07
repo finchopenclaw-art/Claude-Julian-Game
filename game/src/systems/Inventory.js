@@ -96,6 +96,15 @@ export class Inventory {
         return slot ? slot.itemId : null;
     }
 
+    swapSlots(a, b) {
+        if (a < 0 || a >= this.size || b < 0 || b >= this.size) return;
+        if (a === b) return;
+        const temp = this.slots[a];
+        this.slots[a] = this.slots[b];
+        this.slots[b] = temp;
+        this._notify();
+    }
+
     selectSlot(index) {
         if (index >= 0 && index < 8) {
             this.selectedSlot = index;

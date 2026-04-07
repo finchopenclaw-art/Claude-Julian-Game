@@ -177,6 +177,9 @@ export class UIScene extends Phaser.Scene {
             CookedMeat: 0xcc6633, Berry: 0xcc2244, BerryPie: 0xdd6688,
         };
 
+        // Track which slot is "picked up" for swapping
+        if (this._swapFrom === undefined) this._swapFrom = -1;
+
         this.inventoryPanel = this.add.container(0, 0).setDepth(300);
 
         // Dark overlay
@@ -189,17 +192,19 @@ export class UIScene extends Phaser.Scene {
         const SLOT = 52;
         const GAP = 4;
         const panelW = COLS * (SLOT + GAP) + GAP + 20;
-        const panelH = ROWS * (SLOT + GAP) + GAP + 50;
+        const panelH = ROWS * (SLOT + GAP) + GAP + 70;
         const px = (800 - panelW) / 2;
         const py = (600 - panelH) / 2;
 
         const panelBg = this.add.rectangle(400, 300, panelW, panelH, 0x1a1a2e, 0.95);
         panelBg.setStrokeStyle(2, 0x555555);
+        panelBg.setInteractive(); // block clicks through
         this.inventoryPanel.add(panelBg);
 
         // Title
-        const title = this.add.text(400, py + 14, 'Inventory', {
-            fontSize: '16px', fontFamily: 'Arial', color: '#ffffff',
+        const titleText = this._swapFrom >= 0 ? 'Inventory — Tap a slot to swap' : 'Inventory — Tap to move items';
+        const title = this.add.text(400, py + 14, titleText, {
+            fontSize: '14px', fontFamily: 'Arial', color: this._swapFrom >= 0 ? '#ffcc00' : '#ffffff',
         }).setOrigin(0.5, 0);
         this.inventoryPanel.add(title);
 
@@ -209,7 +214,10 @@ export class UIScene extends Phaser.Scene {
         const closeTxt = this.add.text(px + panelW - 20, py + 20, 'X', {
             fontSize: '14px', fontFamily: 'Arial', color: '#ffffff', fontStyle: 'bold',
         }).setOrigin(0.5);
-        closeBtn.on('pointerdown', () => { this.toggleInventory(); });
+        closeBtn.on('pointerdown', () => {
+            this._swapFrom = -1;
+            this.toggleInventory();
+        });
         this.inventoryPanel.add(closeBtn);
         this.inventoryPanel.add(closeTxt);
 
@@ -220,9 +228,34 @@ export class UIScene extends Phaser.Scene {
             const sx = px + 10 + GAP + col * (SLOT + GAP) + SLOT / 2;
             const sy = py + 40 + GAP + row * (SLOT + GAP) + SLOT / 2;
 
-            const slotBg = this.add.rectangle(sx, sy, SLOT, SLOT, 0x222222, 0.9);
-            slotBg.setStrokeStyle(1, 0x444444);
+            // Highlight the picked-up slot
+            const isSelected = (i === this._swapFrom);
+            const bgColor = isSelected ? 0x444400 : 0x222222;
+            const borderColor = isSelected ? 0xffcc00 : 0x444444;
+
+            const slotBg = this.add.rectangle(sx, sy, SLOT, SLOT, bgColor, 0.9);
+            slotBg.setStrokeStyle(isSelected ? 2 : 1, borderColor);
+            slotBg.setInteractive({ useHandCursor: true });
             this.inventoryPanel.add(slotBg);
+
+            // Tap handler for swap
+            const slotIndex = i;
+            slotBg.on('pointerdown', () => {
+                if (this._swapFrom < 0) {
+                    // Pick up this slot
+                    this._swapFrom = slotIndex;
+                } else if (this._swapFrom === slotIndex) {
+                    // Deselect
+                    this._swapFrom = -1;
+                } else {
+                    // Swap and reset
+                    this.inventory.swapSlots(this._swapFrom, slotIndex);
+                    this._swapFrom = -1;
+                }
+                // Refresh panel to show updated state
+                this._hideInventoryPanel();
+                this._showInventoryPanel();
+            });
 
             const slotData = this.inventory.getSlot(i);
             if (slotData) {
@@ -238,7 +271,6 @@ export class UIScene extends Phaser.Scene {
                     this.inventoryPanel.add(qty);
                 }
 
-                // Item name tooltip on hover area
                 const nameTxt = this.add.text(sx, sy - SLOT / 2 + 4, ItemDefs[slotData.itemId]?.displayName || slotData.itemId, {
                     fontSize: '9px', fontFamily: 'Arial', color: '#aaaaaa',
                 }).setOrigin(0.5, 0);
