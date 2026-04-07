@@ -62,8 +62,9 @@ export class WorldRenderer {
                     for (let x = 0; x < MAP_SIZE; x++) {
                         if (this.worldData.getBlock(x, y, z) === parseInt(blockType)) {
                             const isWater = parseInt(blockType) === BLOCK.WATER;
-                            // Center block at (x+0.5, y+0.5, z+0.5) so top face aligns with y+1
-                            const yPos = isWater ? y + 0.3 : y + 0.5;
+                            // Position block: x+0.5 and z+0.5 center on tile, y stays as-is
+                            // BoxGeometry centers at origin, so y=0 means top face at +0.5
+                            const yPos = isWater ? y - 0.2 : y;
                             dummy.position.set(x + 0.5, yPos, z + 0.5);
                             if (isWater) {
                                 dummy.scale.set(1, 0.6, 1);
@@ -103,7 +104,7 @@ export class WorldRenderer {
             if (!vis) continue;
 
             const group = new THREE.Group();
-            group.position.set(node.x + 0.5, 1, node.z + 0.5);
+            group.position.set(node.x + 0.5, 0.5, node.z + 0.5);
             group.userData = { nodeData: node };
 
             if (node.type === 'Tree') {
