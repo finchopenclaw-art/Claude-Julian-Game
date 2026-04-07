@@ -9,6 +9,7 @@ import { GatherSystem3D } from './systems/GatherSystem3D.js';
 import { BuildSystem3D } from './systems/BuildSystem3D.js';
 import { ItemDefs } from './data/ItemDefs.js';
 import { HUD } from './ui/HUD.js';
+import { DayNightCycle } from './world/DayNightCycle.js';
 
 // --- Scene setup ---
 const scene = new THREE.Scene();
@@ -27,7 +28,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // --- Lighting ---
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambientLight);
 const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
 sunLight.position.set(20, 30, 20);
 sunLight.castShadow = true;
@@ -55,6 +57,9 @@ const craftSystem = new CraftSystem(inventory);
 const survivalSystem = new SurvivalSystem(inventory);
 const gatherSystem = new GatherSystem3D(inventory, resourceMeshes);
 const buildSystem = new BuildSystem3D(scene, worldData, worldRenderer, inventory);
+
+// --- Day/Night Cycle ---
+const dayNight = new DayNightCycle(scene, sunLight, ambientLight);
 
 // --- HUD ---
 const hud = new HUD(inventory, craftSystem, survivalSystem);
@@ -200,7 +205,7 @@ window.addEventListener('resize', () => {
 // --- Save / Load ---
 function saveGame() {
     const save = {
-        player: { x: playerPos.x, y: playerPos.y, z: playerPos.z, yaw, pitch },
+        player: { x: playerPos.x, y: playerPos.y, z: playerPos.z, yaw, pitch, timeOfDay: dayNight.timeOfDay },
         inventory: inventory.slots.map(s => s ? { itemId: s.itemId, quantity: s.quantity } : null),
         selectedSlot: inventory.selectedSlot,
         survival: { health: survivalSystem.health, hunger: survivalSystem.hunger },
@@ -223,6 +228,7 @@ function loadGame() {
     playerPos.set(save.player.x, save.player.y, save.player.z);
     yaw = save.player.yaw || 0;
     pitch = save.player.pitch || 0;
+    if (save.player.timeOfDay !== undefined) dayNight.timeOfDay = save.player.timeOfDay;
 
     inventory.slots = save.inventory.map(s => s ? { ...s } : null);
     inventory.selectedSlot = save.selectedSlot || 0;
@@ -294,6 +300,9 @@ function update() {
     survivalSystem.update(now);
     hud.updateBars();
 
+    // Day/night
+    dayNight.update(dt);
+
     // Camera rotation
     const euler = new THREE.Euler(pitch, yaw, 0, 'YXZ');
     camera.quaternion.setFromEuler(euler);
@@ -336,9 +345,12 @@ function update() {
     // Build preview
     buildSystem.updatePreview(camera);
 
-    // Gather proximity hint
+    // Proximity hints
+    const nearDoor = buildSystem.getNearestDoor(playerPos);
     const nearNode = gatherSystem.getNearestNode(playerPos);
-    if (nearNode) {
+    if (nearDoor) {
+        hud.showGatherInfo(`Press E to ${nearDoor.open ? 'close' : 'open'} door`);
+    } else if (nearNode) {
         hud.showGatherInfo(`Press E to gather ${nearNode.userData.nodeData.type}`);
     } else {
         hud.hideGatherInfo();

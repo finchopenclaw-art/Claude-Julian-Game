@@ -185,25 +185,36 @@ export class BuildSystem3D {
         return true;
     }
 
-    tryToggleDoor(playerPos) {
+    getNearestDoor(playerPos) {
+        let nearest = null;
+        let nearestDist = Infinity;
         for (const block of this.placedBlocks) {
             if (block.itemId !== 'WoodDoor') continue;
-            const bPos = new THREE.Vector3(block.x + 0.5, block.y + 0.5, block.z + 0.5);
-            if (playerPos.distanceTo(bPos) > 4) continue;
-
-            block.open = !block.open;
-            if (block.open) {
-                block.mesh.material.opacity = 0.3;
-                block.mesh.material.transparent = true;
-                this.worldData.setBlock(block.x, block.y, block.z, BLOCK.AIR);
-            } else {
-                block.mesh.material.opacity = 1;
-                block.mesh.material.transparent = false;
-                this.worldData.setBlock(block.x, block.y, block.z, block.blockType);
+            const bPos = new THREE.Vector3(block.x + 0.5, 1.5, block.z + 0.5);
+            const dist = new THREE.Vector2(playerPos.x - bPos.x, playerPos.z - bPos.z).length();
+            if (dist < 3 && dist < nearestDist) {
+                nearest = block;
+                nearestDist = dist;
             }
-            return true;
         }
-        return false;
+        return nearest;
+    }
+
+    tryToggleDoor(playerPos) {
+        const block = this.getNearestDoor(playerPos);
+        if (!block) return false;
+
+        block.open = !block.open;
+        if (block.open) {
+            block.mesh.material.opacity = 0.3;
+            block.mesh.material.transparent = true;
+            this.worldData.setBlock(block.x, block.y, block.z, BLOCK.AIR);
+        } else {
+            block.mesh.material.opacity = 1;
+            block.mesh.material.transparent = false;
+            this.worldData.setBlock(block.x, block.y, block.z, block.blockType);
+        }
+        return true;
     }
 
     _getPlacementTarget(raycaster) {
