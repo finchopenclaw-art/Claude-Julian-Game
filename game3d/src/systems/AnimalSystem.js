@@ -56,7 +56,7 @@ export class AnimalSystem {
         if (!def) return;
 
         const group = new THREE.Group();
-        group.position.set(x + 0.5, 1, z + 0.5);
+        group.position.set(x + 0.5, 0.5, z + 0.5);
 
         // Body
         const bodyGeo = new THREE.BoxGeometry(def.bodyW, def.bodyH, def.bodyD);
@@ -181,7 +181,7 @@ export class AnimalSystem {
             }
 
             // Simple leg animation — bob up and down slightly
-            animal.group.position.y = 1 + Math.sin(performance.now() * 0.008) * 0.03;
+            animal.group.position.y = 0.5 + Math.sin(performance.now() * 0.008) * 0.03;
         }
     }
 
@@ -233,7 +233,7 @@ export class AnimalSystem {
                 animal.hp = animal.maxHp;
                 animal.dead = false;
                 animal.group.visible = true;
-                animal.group.position.set(animal.spawnX + 0.5, 1, animal.spawnZ + 0.5);
+                animal.group.position.set(animal.spawnX + 0.5, 0.5, animal.spawnZ + 0.5);
                 animal.state = 'idle';
                 animal.stateTimer = 3;
             }, animal.respawnTime);

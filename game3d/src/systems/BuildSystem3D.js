@@ -53,7 +53,7 @@ export class BuildSystem3D {
         // Find placement position: the block adjacent to what we're looking at
         const target = this._getPlacementTarget(raycaster);
         if (target) {
-            this.previewMesh.position.set(target.x + 0.5, target.y + 0.5, target.z + 0.5);
+            this.previewMesh.position.set(target.x + 0.5, target.y, target.z + 0.5);
             const canPlace = this._canPlace(target.x, target.y, target.z);
             this.previewMesh.material.color.setHex(canPlace ? 0x00ff00 : 0xff0000);
             this.previewMesh.visible = true;
@@ -125,7 +125,7 @@ export class BuildSystem3D {
         const geo = new THREE.BoxGeometry(1, 1, 1);
         const mat = new THREE.MeshLambertMaterial({ color });
         const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x + 0.5, y + 0.5, z + 0.5);
+        mesh.position.set(x + 0.5, y, z + 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         this.scene.add(mesh);
@@ -166,7 +166,7 @@ export class BuildSystem3D {
 
         for (let i = 0; i < this.placedBlocks.length; i++) {
             const b = this.placedBlocks[i];
-            const bPos = new THREE.Vector3(b.x + 0.5, b.y + 0.5, b.z + 0.5);
+            const bPos = new THREE.Vector3(b.x + 0.5, b.y, b.z + 0.5);
             const dist = playerPos.distanceTo(bPos);
             if (dist < maxDist && dist < nearestDist) {
                 nearest = i;
@@ -190,7 +190,7 @@ export class BuildSystem3D {
         let nearestDist = Infinity;
         for (const block of this.placedBlocks) {
             if (block.itemId !== 'WoodDoor') continue;
-            const bPos = new THREE.Vector3(block.x + 0.5, 1.5, block.z + 0.5);
+            const bPos = new THREE.Vector3(block.x + 0.5, 1, block.z + 0.5);
             const dist = new THREE.Vector2(playerPos.x - bPos.x, playerPos.z - bPos.z).length();
             if (dist < 3 && dist < nearestDist) {
                 nearest = block;
