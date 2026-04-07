@@ -2,6 +2,118 @@
 import * as THREE from 'three';
 import { BLOCK, MAP_SIZE } from '../world/WorldData.js';
 
+// --- Procedural animal textures ---
+const TEX = 16;
+
+function hexToRGB(hex) {
+    return [(hex >> 16) & 0xff, (hex >> 8) & 0xff, hex & 0xff];
+}
+
+function multiNoise(ctx, shades) {
+    const totalWeight = shades.reduce((s, sh) => s + sh[1], 0);
+    const imgData = ctx.getImageData(0, 0, TEX, TEX);
+    for (let i = 0; i < imgData.data.length; i += 4) {
+        let r = Math.random() * totalWeight;
+        let chosen = shades[0][0];
+        for (const [color, weight] of shades) {
+            r -= weight;
+            if (r <= 0) { chosen = color; break; }
+        }
+        const [cr, cg, cb] = hexToRGB(chosen);
+        imgData.data[i] = cr; imgData.data[i+1] = cg; imgData.data[i+2] = cb; imgData.data[i+3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
+}
+
+function makeAnimalTex(shades, patches) {
+    const c = document.createElement('canvas');
+    c.width = TEX; c.height = TEX;
+    const ctx = c.getContext('2d');
+    multiNoise(ctx, shades);
+    // Add patches (for cow spots, pig belly, etc.)
+    if (patches) {
+        for (const p of patches) {
+            const [cr, cg, cb] = hexToRGB(p.color);
+            ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            // Soften edges with noise
+            for (let dy = 0; dy < p.h; dy++) {
+                for (let dx = 0; dx < p.w; dx++) {
+                    if (Math.random() > 0.7) {
+                        const shade = shades[0][0];
+                        const [sr, sg, sb] = hexToRGB(shade);
+                        ctx.fillStyle = `rgb(${sr},${sg},${sb})`;
+                        ctx.fillRect(p.x + dx, p.y + dy, 1, 1);
+                    }
+                }
+            }
+        }
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    return tex;
+}
+
+function cowBodyTex() {
+    return makeAnimalTex(
+        [[0x8b6040, 3], [0x7a5030, 2], [0x9b7050, 1.5], [0x6a4525, 0.5]],
+        [
+            { x: 2, y: 2, w: 5, h: 5, color: 0xeeeeee },
+            { x: 9, y: 6, w: 6, h: 4, color: 0xf0f0f0 },
+            { x: 4, y: 10, w: 4, h: 5, color: 0xe8e8e8 },
+            { x: 12, y: 12, w: 3, h: 3, color: 0xeeeeee },
+        ]
+    );
+}
+
+function cowHeadTex() {
+    return makeAnimalTex(
+        [[0x7a5535, 3], [0x6a4525, 2], [0x8a6545, 1]],
+        [
+            { x: 3, y: 10, w: 4, h: 3, color: 0x553322 }, // nostril area
+            { x: 9, y: 10, w: 4, h: 3, color: 0x553322 },
+            { x: 6, y: 2, w: 4, h: 3, color: 0xeeeeee },  // white blaze
+        ]
+    );
+}
+
+function cowLegTex() {
+    return makeAnimalTex(
+        [[0x6a4525, 3], [0x5a3515, 2], [0x7a5535, 1]],
+        [{ x: 0, y: 12, w: 16, h: 4, color: 0x443322 }] // hooves
+    );
+}
+
+function pigBodyTex() {
+    return makeAnimalTex(
+        [[0xddaaaa, 3], [0xcc9999, 2], [0xeebbbb, 1.5], [0xbb8888, 0.5]],
+        [
+            { x: 3, y: 8, w: 10, h: 6, color: 0xeecccc },  // belly
+            { x: 1, y: 2, w: 3, h: 3, color: 0xcc9090 },   // mud spots
+            { x: 10, y: 3, w: 4, h: 3, color: 0xcc9090 },
+        ]
+    );
+}
+
+function pigHeadTex() {
+    return makeAnimalTex(
+        [[0xcc8888, 3], [0xbb7777, 2], [0xdd9999, 1]],
+        [
+            { x: 5, y: 8, w: 6, h: 5, color: 0xeea0a0 },  // snout
+            { x: 6, y: 9, w: 2, h: 2, color: 0x995555 },   // nostril
+            { x: 8, y: 9, w: 2, h: 2, color: 0x995555 },
+        ]
+    );
+}
+
+function pigLegTex() {
+    return makeAnimalTex(
+        [[0xcc9999, 3], [0xbb8888, 2], [0xddaaaa, 1]],
+        [{ x: 0, y: 12, w: 16, h: 4, color: 0x996666 }] // hooves
+    );
+}
+
 const ANIMAL_DEFS = {
     Cow: {
         bodyColor: 0x8b6040,
@@ -63,38 +175,52 @@ export class AnimalSystem {
         const legY = legH / 2;              // leg center, bottom at y=0
         const bodyY = legH + def.bodyH / 2; // body sits on top of legs
 
+        // Generate textures based on animal type
+        const isCow = type === 'Cow';
+        const bodyTex = isCow ? cowBodyTex() : pigBodyTex();
+        const headTex = isCow ? cowHeadTex() : pigHeadTex();
+        const legTex = isCow ? cowLegTex() : pigLegTex();
+
         // Body
         const bodyGeo = new THREE.BoxGeometry(def.bodyW, def.bodyH, def.bodyD);
-        const bodyMat = new THREE.MeshLambertMaterial({ color: def.bodyColor });
+        const bodyMat = new THREE.MeshLambertMaterial({ map: bodyTex });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         body.position.y = bodyY;
         body.castShadow = true;
         group.add(body);
 
-        // Spots (cow only)
-        if (def.spotColor) {
-            const spotGeo = new THREE.BoxGeometry(0.35, 0.3, 0.5);
-            const spotMat = new THREE.MeshLambertMaterial({ color: def.spotColor });
-            const spot1 = new THREE.Mesh(spotGeo, spotMat);
-            spot1.position.set(0.25, bodyY + 0.1, 0.2);
-            group.add(spot1);
-            const spot2 = new THREE.Mesh(spotGeo, spotMat);
-            spot2.position.set(-0.2, bodyY, -0.3);
-            group.add(spot2);
-        }
-
         // Head
-        const headSize = type === 'Cow' ? 0.45 : 0.35;
+        const headSize = isCow ? 0.45 : 0.35;
         const headGeo = new THREE.BoxGeometry(headSize, headSize, headSize);
-        const headMat = new THREE.MeshLambertMaterial({ color: def.headColor });
+        const headMat = new THREE.MeshLambertMaterial({ map: headTex });
         const head = new THREE.Mesh(headGeo, headMat);
         head.position.set(0, bodyY + 0.05, def.bodyD / 2 + headSize / 2 - 0.05);
         head.castShadow = true;
         group.add(head);
 
-        // Legs (4 small boxes)
+        // Ears (small boxes on top of head)
+        if (isCow) {
+            const earGeo = new THREE.BoxGeometry(0.12, 0.08, 0.15);
+            const earMat = new THREE.MeshLambertMaterial({ map: headTex });
+            const earL = new THREE.Mesh(earGeo, earMat);
+            earL.position.set(-headSize / 2 + 0.02, bodyY + headSize / 2 + 0.05, def.bodyD / 2 + headSize / 2 - 0.05);
+            group.add(earL);
+            const earR = new THREE.Mesh(earGeo, earMat);
+            earR.position.set(headSize / 2 - 0.02, bodyY + headSize / 2 + 0.05, def.bodyD / 2 + headSize / 2 - 0.05);
+            group.add(earR);
+        }
+
+        // Tail
+        const tailGeo = new THREE.BoxGeometry(0.06, 0.06, 0.3);
+        const tailMat = new THREE.MeshLambertMaterial({ map: bodyTex });
+        const tail = new THREE.Mesh(tailGeo, tailMat);
+        tail.position.set(0, bodyY + 0.1, -def.bodyD / 2 - 0.1);
+        tail.rotation.x = -0.4;
+        group.add(tail);
+
+        // Legs (4 textured boxes)
         const legGeo = new THREE.BoxGeometry(0.15, legH, 0.15);
-        const legMat = new THREE.MeshLambertMaterial({ color: def.bodyColor });
+        const legMat = new THREE.MeshLambertMaterial({ map: legTex });
         const legOffsets = [
             [-def.bodyW / 3, legY, def.bodyD / 3],
             [def.bodyW / 3, legY, def.bodyD / 3],
