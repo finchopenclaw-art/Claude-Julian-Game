@@ -7,8 +7,8 @@ export class DayNightCycle {
         this.sunLight = sunLight;
         this.ambientLight = ambientLight;
 
-        // Full day cycle duration in seconds (4 minutes)
-        this.cycleDuration = 240;
+        // Full day cycle duration in seconds (8 minutes)
+        this.cycleDuration = 480;
         this.timeOfDay = 0.25; // Start at sunrise (0=midnight, 0.25=sunrise, 0.5=noon, 0.75=sunset)
 
         // Sky colors at key times

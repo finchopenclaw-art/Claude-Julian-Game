@@ -16,6 +16,9 @@ export const BLOCK = {
     TORCH: 10,
     LADDER: 11,
     STONE_BRICK: 12,
+    COAL_ORE: 13,
+    IRON_ORE: 14,
+    IRON_BLOCK: 15,
 };
 
 export const BLOCK_COLORS = {
@@ -31,6 +34,9 @@ export const BLOCK_COLORS = {
     [BLOCK.TORCH]:       0xff8800,
     [BLOCK.LADDER]:      0x8b6914,
     [BLOCK.STONE_BRICK]: 0x777777,
+    [BLOCK.COAL_ORE]:    0x444444,
+    [BLOCK.IRON_ORE]:    0x998877,
+    [BLOCK.IRON_BLOCK]:  0xaaaaaa,
 };
 
 // Map from ItemDefs buildModelKey to BLOCK type
@@ -42,6 +48,7 @@ export const ITEM_TO_BLOCK = {
     torch: BLOCK.TORCH,
     ladder: BLOCK.LADDER,
     stoneBrick: BLOCK.STONE_BRICK,
+    ironBlock: BLOCK.IRON_BLOCK,
 };
 
 export const BLOCK_TO_ITEM = {};
@@ -146,6 +153,14 @@ export const RESOURCE_NODES = [
     { type: 'BerryBush', x: 25, z: 30 },
     { type: 'BerryBush', x: 38, z: 15 },
     { type: 'BerryBush', x: 12, z: 38 },
+    // Ore deposits
+    { type: 'CoalOre', x: 8,  z: 14 },
+    { type: 'CoalOre', x: 30, z: 8 },
+    { type: 'CoalOre', x: 44, z: 38 },
+    { type: 'CoalOre', x: 18, z: 44 },
+    { type: 'IronOre', x: 22, z: 6 },
+    { type: 'IronOre', x: 40, z: 28 },
+    { type: 'IronOre', x: 6,  z: 40 },
 ];
 
 export const PLAYER_SPAWN = { x: 12, z: 12 };

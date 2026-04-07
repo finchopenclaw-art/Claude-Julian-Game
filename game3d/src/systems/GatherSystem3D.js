@@ -5,6 +5,8 @@ const NODE_DEFS = {
     Tree: { hp: 3, dropItem: 'Wood', dropAmount: 2, respawnTime: 30000 },
     Rock: { hp: 5, dropItem: 'Stone', dropAmount: 1, respawnTime: 30000 },
     BerryBush: { hp: 2, dropItem: 'Berry', dropAmount: 3, respawnTime: 15000 },
+    CoalOre: { hp: 4, dropItem: 'Coal', dropAmount: 2, respawnTime: 45000 },
+    IronOre: { hp: 6, dropItem: 'IronOre', dropAmount: 1, respawnTime: 60000 },
 };
 
 export class GatherSystem3D {
@@ -48,11 +50,12 @@ export class GatherSystem3D {
         const type = node.userData.nodeData.type;
         const def = NODE_DEFS[type];
 
-        // Check if player has StoneTool equipped for bonus
+        // Check if player has a tool equipped for bonus
         const selectedItem = this.inventory.getSelectedItem();
-        const hasTool = selectedItem === 'StoneTool';
-        const cooldown = hasTool ? 300 : 500;
-        const bonusDrop = hasTool ? 1 : 0;
+        const hasIronTool = selectedItem === 'IronTool';
+        const hasStoneTool = selectedItem === 'StoneTool';
+        const cooldown = hasIronTool ? 200 : hasStoneTool ? 300 : 500;
+        const bonusDrop = hasIronTool ? 2 : hasStoneTool ? 1 : 0;
 
         this.cooldownUntil = time + cooldown;
 

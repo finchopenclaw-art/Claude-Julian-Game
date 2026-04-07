@@ -1,6 +1,7 @@
 // WorldRenderer.js — Renders voxel world using Three.js InstancedMesh
 import * as THREE from 'three';
 import { BLOCK, BLOCK_COLORS, MAP_SIZE, MAX_HEIGHT } from './WorldData.js';
+import { createBlockMaterials } from './BlockTextures.js';
 
 export class WorldRenderer {
     constructor(scene, worldData) {
@@ -32,13 +33,18 @@ export class WorldRenderer {
             }
         }
 
-        // Create InstancedMesh per block type
+        // Create InstancedMesh per block type with textures
         const geometry = new THREE.BoxGeometry(1, 1, 1);
         const dummy = new THREE.Object3D();
+        const blockMaterials = createBlockMaterials();
 
         for (const [blockType, count] of Object.entries(counts)) {
-            const color = BLOCK_COLORS[blockType] || 0xff00ff;
-            const material = new THREE.MeshLambertMaterial({ color });
+            // Use textured material if available, otherwise fallback to flat color
+            let material = blockMaterials[parseInt(blockType)];
+            if (!material) {
+                const color = BLOCK_COLORS[blockType] || 0xff00ff;
+                material = new THREE.MeshLambertMaterial({ color });
+            }
 
             // Water is slightly transparent and shorter
             if (parseInt(blockType) === BLOCK.WATER) {
@@ -86,6 +92,8 @@ export class WorldRenderer {
             Tree: { color: 0x2d5a1e, trunkColor: 0x5a3a1a, height: 3 },
             Rock: { color: 0x888888, height: 1 },
             BerryBush: { color: 0x3a8a3a, berryColor: 0xcc2244, height: 1 },
+            CoalOre: { color: 0x555555, spotColor: 0x222222, height: 1 },
+            IronOre: { color: 0x777777, spotColor: 0xc4a87a, height: 1 },
         };
 
         for (const node of nodes) {
@@ -134,6 +142,25 @@ export class WorldRenderer {
                     const berry = new THREE.Mesh(berryGeo, berryMat);
                     berry.position.set(...pos);
                     group.add(berry);
+                }
+            } else if (node.type === 'CoalOre' || node.type === 'IronOre') {
+                // Ore block with colored spots
+                const ore = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.9, 0.7, 0.9),
+                    new THREE.MeshLambertMaterial({ color: vis.color })
+                );
+                ore.position.y = -0.15;
+                group.add(ore);
+
+                // Ore spots
+                const spotGeo = new THREE.BoxGeometry(0.2, 0.2, 0.05);
+                const spotMat = new THREE.MeshLambertMaterial({ color: vis.spotColor });
+                for (const pos of [[0.2, 0, 0.46], [-0.25, 0.1, 0.46], [0.1, -0.1, 0.46],
+                                   [0.46, 0.05, 0.2], [0.46, -0.1, -0.15],
+                                   [-0.2, 0.1, -0.46], [0.15, -0.05, -0.46]]) {
+                    const spot = new THREE.Mesh(spotGeo, spotMat);
+                    spot.position.set(...pos);
+                    group.add(spot);
                 }
             }
 

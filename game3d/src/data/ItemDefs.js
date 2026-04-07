@@ -17,4 +17,9 @@ export const ItemDefs = {
     BerryPie:   { displayName: 'Berry Pie',  maxStack: 8,  category: 'Consumable', hungerRestore: 50 },
     RawMeat:    { displayName: 'Raw Meat',   maxStack: 16, category: 'Resource' },
     Leather:    { displayName: 'Leather',    maxStack: 32, category: 'Resource' },
+    Coal:       { displayName: 'Coal',       maxStack: 64, category: 'Resource' },
+    IronOre:    { displayName: 'Iron Ore',   maxStack: 64, category: 'Resource' },
+    IronIngot:  { displayName: 'Iron Ingot', maxStack: 64, category: 'Resource' },
+    IronTool:   { displayName: 'Iron Tool',  maxStack: 1,  category: 'Tool' },
+    IronBlock:  { displayName: 'Iron Block', maxStack: 64, category: 'Buildable', buildModelKey: 'ironBlock' },
 };

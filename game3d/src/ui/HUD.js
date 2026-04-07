@@ -9,6 +9,7 @@ const ITEM_COLORS = {
     Ladder: '#8b6914', StoneBrick: '#777',
     CookedMeat: '#cc6633', Berry: '#cc2244', BerryPie: '#dd6688',
     RawMeat: '#aa4444', Leather: '#8b6040',
+    Coal: '#444', IronOre: '#998877', IronIngot: '#c0c0c0', IronTool: '#d0d0d0', IronBlock: '#aaaaaa',
 };
 
 export class HUD {

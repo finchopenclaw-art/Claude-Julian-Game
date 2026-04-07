@@ -72,4 +72,22 @@ export const RecipeDefs = {
         output: 'CookedMeat',
         outputQty: 1,
     },
+    SmeltIron: {
+        displayName: 'Iron Ingot',
+        inputs: { IronOre: 2, Coal: 1 },
+        output: 'IronIngot',
+        outputQty: 1,
+    },
+    CraftIronTool: {
+        displayName: 'Iron Tool',
+        inputs: { IronIngot: 3, Stick: 2 },
+        output: 'IronTool',
+        outputQty: 1,
+    },
+    CraftIronBlock: {
+        displayName: 'Iron Block',
+        inputs: { IronIngot: 4 },
+        output: 'IronBlock',
+        outputQty: 1,
+    },
 };
