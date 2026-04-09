@@ -10,6 +10,7 @@ import { BuildSystem3D } from './systems/BuildSystem3D.js';
 import { ItemDefs } from './data/ItemDefs.js';
 import { HUD } from './ui/HUD.js';
 import { AnimalSystem } from './systems/AnimalSystem.js';
+import { TouchControls } from './ui/TouchControls.js';
 import { DayNightCycle } from './world/DayNightCycle.js';
 
 // --- Scene setup ---
@@ -67,6 +68,23 @@ const dayNight = new DayNightCycle(scene, sunLight, ambientLight);
 
 // --- HUD ---
 const hud = new HUD(inventory, craftSystem, survivalSystem);
+
+// --- Touch Controls ---
+const touch = new TouchControls();
+if (touch.active) {
+    touch.onInteract = () => doInteract();
+    touch.onPlace = () => {
+        const sel = inventory.getSelectedItem();
+        if (sel && ItemDefs[sel]?.category === 'Buildable') {
+            if (!buildSystem.active) buildSystem.enterBuildMode(sel);
+            buildSystem.tryPlaceAtPlayer(playerPos, facingX, facingZ);
+        }
+    };
+    touch.onRemove = () => buildSystem.tryRemoveNearest(playerPos);
+    touch.onCraft = () => hud.toggleCrafting();
+    touch.onInventory = () => hud.toggleInventory();
+    touch.onMenu = () => hud._showMenu();
+}
 
 // --- Player state ---
 const playerPos = new THREE.Vector3(PLAYER_SPAWN.x, 1.7, PLAYER_SPAWN.z);
@@ -316,6 +334,14 @@ function update() {
     // Animals
     animalSystem.update(dt);
 
+    // Touch camera look
+    if (touch.active) {
+        const lookD = touch.consumeLookDelta();
+        yaw -= lookD.x;
+        pitch -= lookD.y;
+        pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, pitch));
+    }
+
     // Camera rotation
     const euler = new THREE.Euler(pitch, yaw, 0, 'YXZ');
     camera.quaternion.setFromEuler(euler);
@@ -334,10 +360,18 @@ function update() {
 
     const speed = moveSpeed * survivalSystem.speedMultiplier;
     const velocity = new THREE.Vector3(0, 0, 0);
+    // Keyboard
     if (keys['KeyW'] || keys['ArrowUp']) velocity.add(forward);
     if (keys['KeyS'] || keys['ArrowDown']) velocity.sub(forward);
     if (keys['KeyD'] || keys['ArrowRight']) velocity.add(right);
     if (keys['KeyA'] || keys['ArrowLeft']) velocity.sub(right);
+    // Touch D-pad
+    if (touch.active) {
+        if (touch.moveDir.z < 0) velocity.add(forward);
+        if (touch.moveDir.z > 0) velocity.sub(forward);
+        if (touch.moveDir.x > 0) velocity.add(right);
+        if (touch.moveDir.x < 0) velocity.sub(right);
+    }
 
     if (velocity.length() > 0) {
         velocity.normalize().multiplyScalar(speed * dt);
@@ -362,12 +396,13 @@ function update() {
     const nearDoor = buildSystem.getNearestDoor(playerPos);
     const nearNode = gatherSystem.getNearestNode(playerPos);
     const nearAnimal = animalSystem.getNearestAnimal(playerPos);
+    const eKey = touch.active ? 'Tap E' : 'Press E';
     if (nearDoor) {
-        hud.showGatherInfo(`Press E to ${nearDoor.open ? 'close' : 'open'} door`);
+        hud.showGatherInfo(`${eKey} to ${nearDoor.open ? 'close' : 'open'} door`);
     } else if (nearNode) {
-        hud.showGatherInfo(`Press E to gather ${nearNode.userData.nodeData.type}`);
+        hud.showGatherInfo(`${eKey} to gather ${nearNode.userData.nodeData.type}`);
     } else if (nearAnimal) {
-        hud.showGatherInfo(`Press E to harvest ${nearAnimal.type} (${nearAnimal.hp}/${nearAnimal.maxHp} HP)`);
+        hud.showGatherInfo(`${eKey} to harvest ${nearAnimal.type} (${nearAnimal.hp}/${nearAnimal.maxHp} HP)`);
     } else {
         hud.hideGatherInfo();
     }

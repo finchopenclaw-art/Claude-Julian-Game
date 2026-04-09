@@ -322,14 +322,13 @@ export class HUD {
                 <b style="color:#4ade80;">4. SURVIVE</b> — Select food, press <b>E</b> to eat. Don't starve!
             </div>
             <hr style="border-color:#333;margin:10px 0;">
-            <div style="color:#aaa;font-size:11px;line-height:2;">
-                <b>WASD</b> Move &nbsp; <b>Mouse</b> Look &nbsp; <b>E</b> Gather/Eat/Door<br>
-                <b>Q</b> Place block &nbsp; <b>X</b> Remove block<br>
-                <b>C</b> Crafting &nbsp; <b>I/Tab</b> Inventory &nbsp; <b>1-8</b> Hotbar<br>
-                <b>P</b> Save &nbsp; <b>L</b> Load &nbsp; <b>Esc</b> Release mouse
-            </div>
+            <div style="color:#aaa;font-size:11px;line-height:2;" id="help-controls"></div>
             <div class="menu-item" style="margin-top:12px;" id="help-close">Close</div>
         `;
+        const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+        document.getElementById('help-controls').innerHTML = isTouch
+            ? '<b>D-pad</b> Move &nbsp; <b>Drag screen</b> Look<br><b>E btn</b> Gather/Eat/Door &nbsp; <b>Build btn</b> Place<br><b>Break btn</b> Remove &nbsp; <b>Hotbar</b> Tap to select<br><b>C/Inv/\u2630</b> Crafting, Inventory, Menu'
+            : '<b>WASD</b> Move &nbsp; <b>Mouse</b> Look &nbsp; <b>E</b> Gather/Eat/Door<br><b>Q</b> Place block &nbsp; <b>X</b> Remove block<br><b>C</b> Crafting &nbsp; <b>I/Tab</b> Inventory &nbsp; <b>1-8</b> Hotbar<br><b>P</b> Save &nbsp; <b>L</b> Load &nbsp; <b>Esc</b> Release mouse';
         document.getElementById('help-close').addEventListener('click', () => this._closePanel());
     }
 
